@@ -20,7 +20,7 @@
   }
   
   body {
-    @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-white;
+    @apply bg-rak-white dark:bg-gray-950 text-gray-900 dark:text-white;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     transition: background-color 0.2s ease, color 0.2s ease;
   }
@@ -55,19 +55,19 @@
 @layer components {
   /* Medical UI Components */
   .medical-card {
-    @apply bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-medical hover:shadow-medical-lg transition-shadow duration-200;
+    @apply bg-rak-white dark:bg-gray-800 rounded-lg border border-rak-beige-200 dark:border-gray-700 shadow-medical hover:shadow-medical-lg transition-shadow duration-200;
   }
   
   .medical-input {
-    @apply border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors;
+    @apply border border-rak-beige-300 dark:border-gray-600 rounded-md px-3 py-2 bg-rak-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-600 focus:border-transparent transition-colors;
   }
   
   .medical-button-primary {
-    @apply bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white font-medium px-4 py-2 rounded-md transition-colors focus:ring-2 focus:ring-teal-500 focus:ring-offset-2;
+    @apply bg-rak-magenta-600 hover:bg-rak-magenta-700 active:bg-rak-magenta-800 text-white font-medium px-4 py-2 rounded-md transition-colors focus:ring-2 focus:ring-rak-magenta-500 focus:ring-offset-2;
   }
   
   .medical-button-secondary {
-    @apply bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium px-4 py-2 rounded-md transition-colors;
+    @apply bg-rak-beige-100 dark:bg-gray-800 hover:bg-rak-beige-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium px-4 py-2 rounded-md transition-colors;
   }
   
   /* Status Indicators */
@@ -141,28 +141,28 @@
   
   /* Medical Color Utilities */
   .text-medical-primary {
-    @apply text-rak-primary-600 dark:text-rak-primary-400;
+    @apply text-rak-magenta-600 dark:text-rak-magenta-400;
   }
   
   .text-medical-secondary {
-    @apply text-rak-secondary-600 dark:text-rak-secondary-400;
+    @apply text-rak-beige-600 dark:text-rak-beige-400;
   }
   
   .bg-medical-primary {
-    @apply bg-rak-primary-600;
+    @apply bg-rak-magenta-600;
   }
   
   .bg-medical-secondary {
-    @apply bg-rak-secondary-600;
+    @apply bg-rak-beige-600;
   }
   
   /* Focus and Interaction States */
   .focus-medical {
-    @apply focus:ring-2 focus:ring-rak-primary-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900;
+    @apply focus:ring-2 focus:ring-rak-magenta-500 focus:ring-offset-2 focus:ring-offset-rak-white dark:focus:ring-offset-gray-900;
   }
   
   .hover-medical {
-    @apply hover:bg-rak-primary-50 dark:hover:bg-rak-primary-900/20 transition-colors;
+    @apply hover:bg-rak-pink-50 dark:hover:bg-rak-pink-900/20 transition-colors;
   }
 }
 

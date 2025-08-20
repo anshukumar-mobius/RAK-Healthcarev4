@@ -39,33 +39,33 @@ export function LoginForm() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rak-primary-50 via-white to-rak-accent-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-rak-pink-50 via-rak-white to-rak-beige-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-rak-primary-600 to-rak-primary-700 rounded-3xl flex items-center justify-center shadow-xl">
+            <div className="w-24 h-24 bg-gradient-to-br from-rak-magenta-600 to-rak-magenta-700 rounded-3xl flex items-center justify-center shadow-xl">
               <Shield className="w-12 h-12 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-rak-primary-600 dark:text-white mb-2">
+          <h2 className="text-3xl font-bold text-rak-magenta-600 dark:text-white mb-2">
             RAK Hospital
           </h2>
-          <p className="text-lg font-medium text-rak-secondary-600 dark:text-gray-400 mb-1">
+          <p className="text-lg font-medium text-rak-beige-600 dark:text-gray-400 mb-1">
             Management System
           </p>
-          <p className="text-sm text-rak-secondary-500 dark:text-gray-500">
+          <p className="text-sm text-rak-beige-500 dark:text-gray-500">
             Government of Ras Al Khaimah • وزارة الصحة
           </p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-100 dark:border-gray-700">
+        <div className="bg-rak-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-rak-beige-100 dark:border-gray-700">
           <div className="mb-6">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white text-center">
               Healthcare Professional Login
             </h3>
-            <p className="text-sm text-rak-secondary-600 dark:text-gray-400 text-center mt-1">
+            <p className="text-sm text-rak-beige-600 dark:text-gray-400 text-center mt-1">
               Access your medical dashboard
             </p>
           </div>
@@ -79,7 +79,7 @@ export function LoginForm() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-primary-500 focus:border-transparent transition-colors"
+                className="w-full px-4 py-3 border border-rak-beige-300 dark:border-gray-600 rounded-lg bg-rak-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors"
                 placeholder="Enter your government email"
                 required
               />
@@ -94,7 +94,7 @@ export function LoginForm() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-primary-500 focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 pr-12 border border-rak-beige-300 dark:border-gray-600 rounded-lg bg-rak-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors"
                   placeholder="Enter your password"
                   required
                 />
@@ -117,7 +117,7 @@ export function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-rak-primary-600 to-rak-primary-700 hover:from-rak-primary-700 hover:to-rak-primary-800 disabled:from-rak-primary-400 disabled:to-rak-primary-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+              className="w-full bg-gradient-to-r from-rak-magenta-600 to-rak-magenta-700 hover:from-rak-magenta-700 hover:to-rak-magenta-800 disabled:from-rak-magenta-400 disabled:to-rak-magenta-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -131,7 +131,7 @@ export function LoginForm() {
           </form>
 
           {/* Demo Users */}
-          <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-700">
+          <div className="mt-8 pt-6 border-t border-rak-beige-100 dark:border-gray-700">
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center">
               Demo Users (Password: password123)
             </p>
@@ -143,10 +143,10 @@ export function LoginForm() {
                     setEmail(user.email);
                     setPassword('password123');
                   }}
-                  className="w-full text-left px-4 py-3 text-sm bg-rak-primary-50 dark:bg-gray-700 hover:bg-rak-primary-100 dark:hover:bg-gray-600 rounded-lg transition-colors border border-rak-primary-100 dark:border-gray-600"
+                  className="w-full text-left px-4 py-3 text-sm bg-rak-pink-50 dark:bg-gray-700 hover:bg-rak-pink-100 dark:hover:bg-gray-600 rounded-lg transition-colors border border-rak-pink-100 dark:border-gray-600"
                 >
-                  <div className="font-semibold text-rak-primary-700 dark:text-white">{user.role}</div>
-                  <div className="text-rak-secondary-600 dark:text-gray-400 text-xs">{user.email}</div>
+                  <div className="font-semibold text-rak-magenta-700 dark:text-white">{user.role}</div>
+                  <div className="text-rak-beige-600 dark:text-gray-400 text-xs">{user.email}</div>
                 </button>
               ))}
             </div>
@@ -154,7 +154,7 @@ export function LoginForm() {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-sm text-rak-secondary-500 dark:text-gray-400 space-y-1">
+        <div className="text-center text-sm text-rak-beige-500 dark:text-gray-400 space-y-1">
           <p>© 2024 Government of Ras Al Khaimah</p>
           <p>Ministry of Health & Prevention Approved</p>
           <p className="text-xs">All rights reserved • جميع الحقوق محفوظة</p>

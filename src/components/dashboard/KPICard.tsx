@@ -13,19 +13,19 @@ interface KPICardProps {
 }
 
 const colorClasses = {
-  blue: 'bg-rak-primary-50 dark:bg-rak-primary-900/20 text-rak-primary-600 dark:text-rak-primary-400',
+  blue: 'bg-rak-pink-50 dark:bg-rak-pink-900/20 text-rak-magenta-600 dark:text-rak-magenta-400',
   green: 'bg-rak-success-50 dark:bg-rak-success-900/20 text-rak-success-600 dark:text-rak-success-400',
   yellow: 'bg-rak-warning-50 dark:bg-rak-warning-900/20 text-rak-warning-600 dark:text-rak-warning-400',
   red: 'bg-rak-error-50 dark:bg-rak-error-900/20 text-rak-error-600 dark:text-rak-error-400',
-  teal: 'bg-rak-accent-50 dark:bg-rak-accent-900/20 text-rak-accent-600 dark:text-rak-accent-400'
+  teal: 'bg-rak-beige-50 dark:bg-rak-beige-900/20 text-rak-beige-600 dark:text-rak-beige-400'
 };
 
 export function KPICard({ title, value, change, icon: Icon, color = 'teal' }: KPICardProps) {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200">
+    <div className="bg-rak-white dark:bg-gray-800 rounded-lg border border-rak-beige-200 dark:border-gray-700 p-4 hover:shadow-md transition-all duration-200">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className="text-xs font-medium text-rak-secondary-600 dark:text-gray-400 mb-1">
+          <p className="text-xs font-medium text-rak-beige-600 dark:text-gray-400 mb-1">
             {title}
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
@@ -43,7 +43,7 @@ export function KPICard({ title, value, change, icon: Icon, color = 'teal' }: KP
               }`}>
                 {Math.abs(change.value)}%
               </span>
-              <span className="text-xs text-rak-secondary-500 dark:text-gray-400 ml-1">
+              <span className="text-xs text-rak-beige-500 dark:text-gray-400 ml-1">
                 vs last month
               </span>
             </div>

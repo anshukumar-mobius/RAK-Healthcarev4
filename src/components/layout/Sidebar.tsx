@@ -95,16 +95,16 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const filteredMenuItems = menuItems.filter(item => item.roles.includes(role));
 
   return (
-    <aside className="w-56 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 h-full overflow-y-auto shadow-sm">
+    <aside className="w-56 bg-rak-white dark:bg-gray-900 border-r border-rak-beige-200 dark:border-gray-700 h-full overflow-y-auto shadow-sm">
       {/* Sidebar Header */}
-      <div className="p-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-3 border-b border-rak-beige-200 dark:border-gray-700">
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          <div className="w-7 h-7 bg-rak-primary-600 rounded-md flex items-center justify-center">
+          <div className="w-7 h-7 bg-rak-magenta-600 rounded-md flex items-center justify-center">
             <LayoutDashboard className="w-3.5 h-3.5 text-white" />
           </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Dashboard</h3>
-            <p className="text-xs text-rak-secondary-600 dark:text-gray-400">Management Portal</p>
+            <p className="text-xs text-rak-beige-600 dark:text-gray-400">Management Portal</p>
           </div>
         </div>
       </div>
@@ -120,8 +120,8 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               onClick={() => setActiveTab(item.key)}
               className={`w-full flex items-center space-x-2 rtl:space-x-reverse px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 isActive
-                  ? 'bg-rak-primary-50 dark:bg-rak-primary-900/20 text-rak-primary-700 dark:text-rak-primary-400 border-r-2 rtl:border-r-0 rtl:border-l-2 border-rak-primary-600 shadow-sm'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-rak-primary-600'
+                  ? 'bg-rak-pink-50 dark:bg-rak-pink-900/20 text-rak-magenta-700 dark:text-rak-magenta-400 border-r-2 rtl:border-r-0 rtl:border-l-2 border-rak-magenta-600 shadow-sm'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-rak-pink-50 dark:hover:bg-gray-800 hover:text-rak-magenta-600'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -132,12 +132,12 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       </nav>
       
       {/* Sidebar Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-rak-beige-200 dark:border-gray-700 bg-rak-white dark:bg-gray-900">
         <div className="text-center">
-          <p className="text-xs text-rak-secondary-600 dark:text-gray-400">
+          <p className="text-xs text-rak-beige-600 dark:text-gray-400">
             © 2024 RAK Government
           </p>
-          <p className="text-xs text-rak-secondary-500 dark:text-gray-500">
+          <p className="text-xs text-rak-beige-500 dark:text-gray-500">
             All rights reserved
           </p>
         </div>

@@ -71,8 +71,8 @@ export function EMRViewer({ patient }: EMRViewerProps) {
     if (!data) return null;
     
     return (
-      <div className="bg-teal-50 dark:bg-teal-900/20 rounded-lg p-4 mt-3">
-        <h5 className="font-medium text-teal-800 dark:text-teal-400 mb-3">Vital Signs</h5>
+      <div className="bg-rak-beige-50 dark:bg-rak-beige-900/20 rounded-lg p-4 mt-3">
+        <h5 className="font-medium text-rak-beige-800 dark:text-rak-beige-400 mb-3">Vital Signs</h5>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {data.temperature && (
           <div className="text-sm">
@@ -124,7 +124,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
         )}
         </div>
         {data.recordedBy && (
-          <div className="mt-3 pt-3 border-t border-teal-200 dark:border-teal-800 text-xs text-teal-700 dark:text-teal-400">
+          <div className="mt-3 pt-3 border-t border-rak-beige-200 dark:border-rak-beige-800 text-xs text-rak-beige-700 dark:text-rak-beige-400">
             Recorded by: {data.recordedBy} • {data.recordedAt ? new Date(data.recordedAt).toLocaleString() : ''}
           </div>
         )}
@@ -138,54 +138,54 @@ export function EMRViewer({ patient }: EMRViewerProps) {
     const notes = entry.clinicalNotes;
     
     return (
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mt-3">
-        <h5 className="font-medium text-blue-800 dark:text-blue-400 mb-3">Clinical Notes</h5>
+      <div className="bg-rak-pink-50 dark:bg-rak-pink-900/20 rounded-lg p-4 mt-3">
+        <h5 className="font-medium text-rak-magenta-800 dark:text-rak-magenta-400 mb-3">Clinical Notes</h5>
         <div className="space-y-3">
           {notes.chiefComplaint && (
             <div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">Chief Complaint:</span>
+              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Chief Complaint:</span>
               <p className="text-gray-900 dark:text-white mt-1">{notes.chiefComplaint}</p>
             </div>
           )}
           
           {notes.historyOfPresentIllness && (
             <div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">History of Present Illness:</span>
+              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">History of Present Illness:</span>
               <p className="text-gray-900 dark:text-white mt-1">{notes.historyOfPresentIllness}</p>
             </div>
           )}
           
           {notes.reviewOfSystems && (
             <div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">Review of Systems:</span>
+              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Review of Systems:</span>
               <p className="text-gray-900 dark:text-white mt-1">{notes.reviewOfSystems}</p>
             </div>
           )}
           
           {notes.physicalExamination && (
             <div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">Physical Examination:</span>
+              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Physical Examination:</span>
               <p className="text-gray-900 dark:text-white mt-1">{notes.physicalExamination}</p>
             </div>
           )}
           
           {notes.assessment && (
             <div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">Assessment:</span>
+              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Assessment:</span>
               <p className="text-gray-900 dark:text-white mt-1">{notes.assessment}</p>
             </div>
           )}
           
           {notes.plan && (
             <div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">Plan:</span>
+              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Plan:</span>
               <p className="text-gray-900 dark:text-white mt-1 whitespace-pre-line">{notes.plan}</p>
             </div>
           )}
           
           {notes.differentialDiagnosis && notes.differentialDiagnosis.length > 0 && (
             <div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">Differential Diagnosis:</span>
+              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Differential Diagnosis:</span>
               <ul className="list-disc list-inside text-gray-900 dark:text-white mt-1">
                 {notes.differentialDiagnosis.map((diagnosis, index) => (
                   <li key={index}>{diagnosis}</li>
@@ -196,10 +196,10 @@ export function EMRViewer({ patient }: EMRViewerProps) {
           
           {notes.icdCodes && notes.icdCodes.length > 0 && (
             <div>
-              <span className="font-medium text-blue-700 dark:text-blue-300">ICD Codes:</span>
+              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">ICD Codes:</span>
               <div className="flex flex-wrap gap-2 mt-1">
                 {notes.icdCodes.map((code, index) => (
-                  <span key={index} className="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-400 px-2 py-1 rounded text-sm font-mono">
+                  <span key={index} className="bg-rak-pink-100 dark:bg-rak-pink-900/40 text-rak-magenta-800 dark:text-rak-magenta-400 px-2 py-1 rounded text-sm font-mono">
                     {code}
                   </span>
                 ))}
@@ -212,9 +212,9 @@ export function EMRViewer({ patient }: EMRViewerProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+    <div className="bg-rak-white dark:bg-gray-800 rounded-lg border border-rak-beige-200 dark:border-gray-700">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="p-6 border-b border-rak-beige-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
@@ -228,7 +228,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
           {canWrite && (
             <button
               onClick={() => setShowEntryForm(true)}
-              className="flex items-center space-x-2 rtl:space-x-reverse bg-rak-primary-600 hover:bg-rak-primary-700 text-white px-4 py-2 rounded-md transition-colors"
+              className="flex items-center space-x-2 rtl:space-x-reverse bg-rak-magenta-600 hover:bg-rak-magenta-700 text-white px-4 py-2 rounded-md transition-colors"
             >
               <Plus className="w-4 h-4" />
               <span>Add Entry</span>
@@ -244,7 +244,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value as any)}
-            className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-primary-500"
+            className="border border-rak-beige-300 dark:border-gray-600 rounded-md px-3 py-1 bg-rak-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
           >
             <option value="all">All Entries</option>
             <option value="consultation">Consultations</option>
@@ -269,7 +269,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
             {canWrite && (
               <button
                 onClick={() => setShowEntryForm(true)}
-                className="mt-4 text-rak-primary-600 hover:text-rak-primary-700 font-medium"
+                className="mt-4 text-rak-magenta-600 hover:text-rak-magenta-700 font-medium"
               >
                 Add the first entry
               </button>
@@ -355,7 +355,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
                   {entry.entryType === 'consultation' && renderClinicalNotes(entry)}
                   
                   {entry.followUpRequired && entry.followUpDate && (
-                    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md p-3 mt-3">
+                    <div className="bg-rak-warning-50 dark:bg-rak-warning-900/20 border border-rak-warning-200 dark:border-rak-warning-800 rounded-md p-3 mt-3">
                       <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-400">
                         <Clock className="w-4 h-4" />
                         <span className="font-medium">Follow-up Required</span>
@@ -371,7 +371,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
                       {entry.tags.map((tag, index) => (
                         <span
                           key={index}
-                          className="px-2 py-1 bg-white dark:bg-gray-800 rounded-full text-xs font-medium opacity-80"
+                          className="px-2 py-1 bg-rak-white dark:bg-gray-800 rounded-full text-xs font-medium opacity-80"
                         >
                           #{tag}
                         </span>
@@ -404,8 +404,8 @@ export function EMRViewer({ patient }: EMRViewerProps) {
       {/* Entry Detail Modal */}
       {selectedEntry && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-rak-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6 border-b border-rak-beige-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {selectedEntry.title}
@@ -436,7 +436,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Structured Data
                     </label>
-                    <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-md">
+                    <div className="bg-rak-beige-50 dark:bg-gray-900 p-3 rounded-md">
                       {Object.entries(selectedEntry.data).map(([key, value]) => (
                         <div key={key} className="mb-2 last:mb-0">
                           <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">
