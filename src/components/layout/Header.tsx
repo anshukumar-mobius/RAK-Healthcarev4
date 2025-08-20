@@ -22,16 +22,7 @@ export function Header() {
       {/* Top Bar */}
       <div className="bg-rak-primary-600 text-white py-2 px-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
-          <div className="flex items-center space-x-6 rtl:space-x-reverse">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <Phone className="w-4 h-4" />
-              <span>Emergency: +971 7 227 2222</span>
-            </div>
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <Calendar className="w-4 h-4" />
-              <span>Appointments: +971 7 227 2000</span>
-            </div>
-          </div>
+          
           
           <div className="flex items-center space-x-4 rtl:space-x-reverse">
             {/* Language Toggle */}
@@ -87,14 +78,7 @@ export function Header() {
             </div>
 
             {/* Primary CTAs */}
-            <div className="flex items-center space-x-4 rtl:space-x-reverse">
-              <button className="bg-rak-success-600 hover:bg-rak-success-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                Find a Doctor
-              </button>
-              <button className="bg-rak-accent-500 hover:bg-rak-accent-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
-                Book Appointment
-              </button>
-            </div>
+           
           </div>
 
           {/* User Menu & Mobile Controls */}
