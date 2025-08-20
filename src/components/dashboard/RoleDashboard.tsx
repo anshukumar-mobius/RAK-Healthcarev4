@@ -336,7 +336,7 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
                   key={index}
                   title={kpi.title}
                   value={kpi.value}
-                  change={kpi.change}
+                  {...('change' in kpi ? { change: kpi.change } : {})}
                   icon={kpi.icon}
                   color={kpi.color}
                 />
