@@ -175,6 +175,8 @@ const mockAppointments = [
   }
 ];
 
+type DiagnosticTestStatus = 'ordered' | 'in-progress' | 'completed';
+
 const mockDiagnosticTests = [
   {
     id: 'T001',
@@ -182,7 +184,7 @@ const mockDiagnosticTests = [
     patientName: 'John Doe',
     doctorName: 'Dr. Sarah Ahmed',
     orderDate: '2025-01-07',
-    status: 'ordered' as const,
+    status: 'ordered' as DiagnosticTestStatus,
     priority: 'urgent' as const,
     type: 'blood' as const
   },
@@ -192,7 +194,7 @@ const mockDiagnosticTests = [
     patientName: 'Sarah Smith',
     doctorName: 'Dr. Michael Brown',
     orderDate: '2025-01-06',
-    status: 'in-progress' as const,
+    status: 'in-progress' as DiagnosticTestStatus,
     priority: 'normal' as const,
     type: 'imaging' as const,
     technician: 'Tech. Lisa Wilson'
