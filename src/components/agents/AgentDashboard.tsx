@@ -17,7 +17,8 @@ import {
   Target,
   Cpu,
   Database,
-  Network
+  Network,
+  RefreshCw
 } from 'lucide-react';
 import { useAgentStore } from '../../stores/agentStore';
 import { useApp } from '../../contexts/AppContext';
