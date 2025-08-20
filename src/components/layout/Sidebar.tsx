@@ -9,7 +9,8 @@ import {
   UserPlus,
   Activity,
   Bed,
-  ClipboardList
+  ClipboardList,
+  Bot
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { t } from '../../utils/translations';
@@ -81,6 +82,12 @@ const menuItems: MenuItem[] = [
     label: 'pendingTests',
     key: 'pending-tests',
     roles: ['diagnostician']
+  },
+  {
+    icon: Bot,
+    label: 'AI Agents',
+    key: 'ai-agents',
+    roles: ['admin', 'doctor', 'nurse', 'receptionist', 'diagnostician']
   }
 ];
 

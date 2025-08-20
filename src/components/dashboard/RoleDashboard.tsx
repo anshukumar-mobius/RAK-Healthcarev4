@@ -64,6 +64,8 @@ import { AppointmentScheduler } from '../appointments/AppointmentScheduler';
 import { DiagnosticWorkflow } from '../diagnostics/DiagnosticWorkflow';
 import { EMRViewer } from '../emr/EMRViewer';
 import { PatientDetailView } from '../emr/PatientDetailView';
+import { AgentDashboard } from '../agents/AgentDashboard';
+import { useAgentStore } from '../../stores/agentStore';
 
 interface RoleDashboardProps {
   activeTab: string;
@@ -321,7 +323,12 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
   const { role, language } = useApp();
   const user = useAuthStore(state => state.user);
   const { patients, searchPatients } = useEMRStore();
+  const { recommendations, getRecommendationsByPriority } = useAgentStore();
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+
+  // Get AI recommendations for current role
+  const criticalRecommendations = getRecommendationsByPriority('critical');
+  const highRecommendations = getRecommendationsByPriority('high');
 
   const renderDashboardContent = () => {
     switch (activeTab) {
@@ -344,6 +351,26 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
             </div>
 
             {/* Role-specific detailed dashboard */}
+            {/* AI Recommendations Banner */}
+            {(criticalRecommendations.length > 0 || highRecommendations.length > 0) && (
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                    <span className="font-medium text-red-800 dark:text-red-400">
+                      {criticalRecommendations.length} critical and {highRecommendations.length} high priority AI recommendations
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('ai-agents')}
+                    className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                  >
+                    View AI Dashboard
+                  </button>
+                </div>
+              </div>
+            )}
+
             {role === 'admin' && renderAdminDashboard()}
             {role === 'doctor' && renderDoctorDashboard()}
             {role === 'nurse' && renderNurseDashboard()}
@@ -575,6 +602,9 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
             onUploadResults={(id) => console.log('Upload results:', id)}
           />
         );
+
+      case 'ai-agents':
+        return <AgentDashboard />;
 
       default:
         return (

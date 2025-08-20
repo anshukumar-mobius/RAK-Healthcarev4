@@ -97,10 +97,13 @@ export function Header() {
             </select>
 
             {/* Notifications */}
-            <button className="relative p-1.5 text-gray-500 hover:text-rak-magenta-600 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-rak-pink-100 dark:hover:bg-gray-800 rounded-md transition-colors">
+            <button 
+              onClick={() => window.location.hash = '#ai-agents'}
+              className="relative p-1.5 text-gray-500 hover:text-rak-magenta-600 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-rak-pink-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+            >
               <Bell className="w-5 h-5" />
-              <span className="absolute -top-0.5 -right-0.5 bg-rak-error-500 text-rak-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                3
+              <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                5
               </span>
             </button>
 
