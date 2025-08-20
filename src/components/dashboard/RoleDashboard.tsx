@@ -100,6 +100,7 @@ const useAgentIntegration = (role: string) => {
 };
 interface RoleDashboardProps {
   activeTab: string;
+  setActiveTab: (tab: string) => void;
 }
 
 // Mock data - in a real app, this would come from APIs
@@ -350,14 +351,13 @@ const mockDiagnosticianData = {
     { technician: 'Tech. Mohammed Rashid', tests: 8, completed: 8, pending: 0 }
   ]
 };
-export function RoleDashboard({ activeTab: initialActiveTab }: RoleDashboardProps) {
+export function RoleDashboard({ activeTab, setActiveTab }: RoleDashboardProps) {
   const { role, language } = useApp();
   const user = useAuthStore(state => state.user);
   const { patients, searchPatients } = useEMRStore();
   const { recommendations, getRecommendationsByPriority, dismissRecommendation } = useAgentStore();
   const { roleAgents, roleRecommendations, triggerAgentAction } = useAgentIntegration(role);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState(initialActiveTab);
 
 
   const renderDashboardContent = () => {

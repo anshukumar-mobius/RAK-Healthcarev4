@@ -25,7 +25,7 @@ function AppContent() {
         
         <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950">
           <div className="p-4 h-full">
-            <RoleDashboard activeTab={activeTab} />
+            <RoleDashboard activeTab={activeTab} setActiveTab={setActiveTab} />
           </div>
         </main>
       </div>

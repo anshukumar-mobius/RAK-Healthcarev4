@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, User, MapPin, Plus, Search } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, Plus, Search, Bot } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { t } from '../../utils/translations';
 import { useAgentStore } from '../../stores/agentStore';
