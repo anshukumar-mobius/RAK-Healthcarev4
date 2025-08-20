@@ -69,23 +69,15 @@ export function AgentDashboard() {
     updateAgentStatus,
     dismissRecommendation,
     triggerAgentAction,
-    simulateAgentActivity
+    processAgentRecommendations
   } = useAgentStore();
 
   const [selectedAgent, setSelectedAgent] = useState<AIAgent | null>(null);
-  const [autoSimulation, setAutoSimulation] = useState(false);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (autoSimulation) {
-      interval = setInterval(() => {
-        simulateAgentActivity();
-      }, 5000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [autoSimulation, simulateAgentActivity]);
+    // Process agent recommendations on component mount
+    processAgentRecommendations();
+  }, [processAgentRecommendations]);
 
   const activeAgents = agents.filter(agent => agent.status === 'active');
   const criticalRecommendations = recommendations.filter(rec => rec.priority === 'critical');
@@ -115,15 +107,11 @@ export function AgentDashboard() {
         </div>
         <div className="flex items-center space-x-3">
           <button
-            onClick={() => setAutoSimulation(!autoSimulation)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
-              autoSimulation 
-                ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                : 'bg-green-100 text-green-700 hover:bg-green-200'
-            }`}
+            onClick={() => processAgentRecommendations()}
+            className="flex items-center space-x-2 px-4 py-2 bg-rak-magenta-600 text-white rounded-md hover:bg-rak-magenta-700"
           >
-            {autoSimulation ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            <span>{autoSimulation ? 'Stop Simulation' : 'Start Simulation'}</span>
+            <RefreshCw className="w-4 h-4" />
+            <span>Process Recommendations</span>
           </button>
         </div>
       </div>

@@ -67,6 +67,36 @@ import { PatientDetailView } from '../emr/PatientDetailView';
 import { AgentDashboard } from '../agents/AgentDashboard';
 import { useAgentStore } from '../../stores/agentStore';
 
+// Agent integration hooks
+const useAgentIntegration = (role: string) => {
+  const { agents, recommendations, triggerAgentAction } = useAgentStore();
+  
+  // Get role-specific agents
+  const roleAgents = agents.filter(agent => {
+    switch (role) {
+      case 'admin':
+        return ['scheduling-optimizer', 'billing-automation', 'patient-flow'].includes(agent.id);
+      case 'doctor':
+        return ['clinical-decision-support', 'medication-management', 'readmission-predictor'].includes(agent.id);
+      case 'nurse':
+        return ['vital-signs-monitor', 'medication-management'].includes(agent.id);
+      case 'receptionist':
+        return ['scheduling-optimizer', 'patient-flow'].includes(agent.id);
+      case 'diagnostician':
+        return ['radiology-ai', 'lab-results-ai', 'equipment-maintenance'].includes(agent.id);
+      default:
+        return false;
+    }
+  });
+  
+  // Get role-specific recommendations
+  const roleRecommendations = recommendations.filter(rec => {
+    const agent = agents.find(a => a.id === rec.agentId);
+    return roleAgents.some(ra => ra.id === agent?.id);
+  });
+  
+  return { roleAgents, roleRecommendations, triggerAgentAction };
+};
 interface RoleDashboardProps {
   activeTab: string;
 }
@@ -323,12 +353,10 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
   const { role, language } = useApp();
   const user = useAuthStore(state => state.user);
   const { patients, searchPatients } = useEMRStore();
-  const { recommendations, getRecommendationsByPriority } = useAgentStore();
+  const { recommendations, getRecommendationsByPriority, dismissRecommendation } = useAgentStore();
+  const { roleAgents, roleRecommendations, triggerAgentAction } = useAgentIntegration(role);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
 
-  // Get AI recommendations for current role
-  const criticalRecommendations = getRecommendationsByPriority('critical');
-  const highRecommendations = getRecommendationsByPriority('high');
 
   const renderDashboardContent = () => {
     switch (activeTab) {
@@ -352,20 +380,80 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
 
             {/* Role-specific detailed dashboard */}
             {/* AI Recommendations Banner */}
-            {(criticalRecommendations.length > 0 || highRecommendations.length > 0) && (
-              <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            {roleRecommendations.length > 0 && (
+              <div className="space-y-4">
+                {roleRecommendations.filter(r => r.priority === 'critical').map(rec => (
+                  <div key={rec.id} className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <AlertTriangle className="w-5 h-5 text-red-600" />
+                          <span className="font-semibold text-red-800 dark:text-red-400">{rec.title}</span>
+                          <span className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                            {rec.confidence}% confidence
+                          </span>
+                        </div>
+                        <p className="text-sm text-red-700 dark:text-red-300 mb-2">{rec.description}</p>
+                        {rec.action && (
+                          <p className="text-sm font-medium text-red-800 dark:text-red-400">
+                            Recommended: {rec.action}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => triggerAgentAction(rec.agentId, rec.action || 'Process recommendation', rec.data)}
+                          className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                        >
+                          Apply
+                        </button>
+                        <button
+                          onClick={() => dismissRecommendation(rec.id)}
+                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {roleRecommendations.filter(r => r.priority === 'high').length > 0 && (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                        <span className="font-medium text-yellow-800 dark:text-yellow-400">
+                          {roleRecommendations.filter(r => r.priority === 'high').length} high priority recommendations
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('ai-agents')}
+                        className="px-3 py-1 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm"
+                      >
+                        View All
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Active Agents Status */}
+            {roleAgents.filter(a => a.status === 'active').length > 0 && (
+              <div className="bg-rak-pink-50 dark:bg-rak-pink-900/20 border border-rak-pink-200 dark:border-rak-pink-800 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                    <span className="font-medium text-red-800 dark:text-red-400">
-                      {criticalRecommendations.length} critical and {highRecommendations.length} high priority AI recommendations
+                    <Bot className="w-5 h-5 text-rak-magenta-600" />
+                    <span className="font-medium text-rak-magenta-800 dark:text-rak-magenta-400">
+                      {roleAgents.filter(a => a.status === 'active').length} AI agents actively monitoring your workflows
                     </span>
                   </div>
                   <button
                     onClick={() => setActiveTab('ai-agents')}
-                    className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+                    className="px-3 py-1 bg-rak-magenta-600 text-white rounded-md hover:bg-rak-magenta-700 text-sm"
                   >
-                    View AI Dashboard
+                    Manage Agents
                   </button>
                 </div>
               </div>

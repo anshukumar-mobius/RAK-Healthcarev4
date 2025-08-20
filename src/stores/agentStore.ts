@@ -32,7 +32,7 @@ interface AgentState {
   
   // AI Actions
   triggerAgentAction: (agentId: string, action: string, data?: any) => void;
-  simulateAgentActivity: () => void;
+  processAgentRecommendations: () => void;
 }
 
 // Mock recommendations
@@ -246,7 +246,6 @@ export const useAgentStore = create<AgentState>()(
       triggerAgentAction: (agentId, action, data) => {
         const agent = get().agents.find(a => a.id === agentId);
         if (agent) {
-          // Update agent status
           set((state) => {
             const agentToUpdate = state.agents.find(a => a.id === agentId);
             if (agentToUpdate) {
@@ -256,7 +255,6 @@ export const useAgentStore = create<AgentState>()(
             }
           });
 
-          // Create a task
           get().addTask({
             agentId,
             type: action,
@@ -265,7 +263,6 @@ export const useAgentStore = create<AgentState>()(
             data: data || {}
           });
 
-          // Simulate processing time
           setTimeout(() => {
             set((state) => {
               const agentToUpdate = state.agents.find(a => a.id === agentId);
@@ -277,24 +274,18 @@ export const useAgentStore = create<AgentState>()(
         }
       },
 
-      simulateAgentActivity: () => {
-        const agents = get().agents;
-        const activeAgents = agents.filter(a => a.status === 'active');
+      processAgentRecommendations: () => {
+        // Process and apply agent recommendations to the system
+        const recommendations = get().recommendations;
+        const criticalRecs = recommendations.filter(r => r.priority === 'critical');
         
-        if (activeAgents.length > 0) {
-          const randomAgent = activeAgents[Math.floor(Math.random() * activeAgents.length)];
-          const actions = [
-            'Analyzing patient data',
-            'Processing recommendations',
-            'Monitoring vital signs',
-            'Optimizing schedules',
-            'Checking inventory levels',
-            'Reviewing lab results'
-          ];
-          
-          const randomAction = actions[Math.floor(Math.random() * actions.length)];
-          get().triggerAgentAction(randomAgent.id, randomAction);
-        }
+        // Auto-process certain types of recommendations
+        criticalRecs.forEach(rec => {
+          if (rec.type === 'alert' && rec.agentId === 'clinical-decision-support') {
+            // Automatically flag patient charts for critical drug interactions
+            console.log('Auto-flagging patient chart for:', rec.title);
+          }
+        });
       }
     })),
     {

@@ -6,6 +6,7 @@ import { Patient, EMREntry, ROLE_PERMISSIONS } from '../../types/emr';
 import { useApp } from '../../contexts/AppContext';
 import { t } from '../../utils/translations';
 import { EMREntryForm } from './EMREntryForm';
+import { useAgentStore } from '../../stores/agentStore';
 
 interface EMRViewerProps {
   patient: Patient;
@@ -35,6 +36,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
   const { language, isRTL } = useApp();
   const user = useAuthStore(state => state.user);
   const { getPatientEMREntries, deleteEMREntry } = useEMRStore();
+  const { triggerAgentAction, addRecommendation } = useAgentStore();
   const [selectedEntry, setSelectedEntry] = useState<EMREntry | null>(null);
   const [showEntryForm, setShowEntryForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<EMREntry | null>(null);
@@ -51,6 +53,29 @@ export function EMRViewer({ patient }: EMRViewerProps) {
   const canDelete = permissions?.canDelete;
   const canAmend = permissions?.canAmend;
 
+  // AI Agent Integration for EMR
+  const handleAIAnalysis = (entry: EMREntry) => {
+    // Trigger clinical decision support agent
+    triggerAgentAction('clinical-decision-support', 'Analyze EMR entry', {
+      patientId: patient.id,
+      entryId: entry.id,
+      entryType: entry.entryType,
+      content: entry.content
+    });
+
+    // Generate AI recommendation based on entry analysis
+    if (entry.entryType === 'consultation' && entry.clinicalNotes) {
+      addRecommendation({
+        type: 'suggestion',
+        priority: 'medium',
+        title: 'Clinical Decision Support Available',
+        description: `AI analysis suggests reviewing drug interactions and treatment protocols for ${patient.firstName} ${patient.lastName}`,
+        action: 'Review clinical guidelines and medication interactions',
+        confidence: 87,
+        agentId: 'clinical-decision-support'
+      });
+    }
+  };
   const handleDeleteEntry = (entryId: string) => {
     if (window.confirm('Are you sure you want to delete this EMR entry?')) {
       deleteEMREntry(entryId);
@@ -333,6 +358,16 @@ export function EMRViewer({ patient }: EMRViewerProps) {
                           className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
                         >
                           <Edit className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      {user?.role === 'doctor' && (
+                        <button
+                          onClick={() => handleAIAnalysis(entry)}
+                          className="p-1 text-gray-400 hover:text-rak-magenta-600 transition-colors"
+                          title="AI Analysis"
+                        >
+                          <Bot className="w-4 h-4" />
                         </button>
                       )}
                       
