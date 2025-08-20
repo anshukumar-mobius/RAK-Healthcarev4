@@ -49,7 +49,8 @@ import {
   Database,
   Monitor,
   Wifi,
-  WifiOff
+  WifiOff,
+  Bot
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuthStore } from '../../stores/authStore';
@@ -349,13 +350,14 @@ const mockDiagnosticianData = {
     { technician: 'Tech. Mohammed Rashid', tests: 8, completed: 8, pending: 0 }
   ]
 };
-export function RoleDashboard({ activeTab }: RoleDashboardProps) {
+export function RoleDashboard({ activeTab: initialActiveTab }: RoleDashboardProps) {
   const { role, language } = useApp();
   const user = useAuthStore(state => state.user);
   const { patients, searchPatients } = useEMRStore();
   const { recommendations, getRecommendationsByPriority, dismissRecommendation } = useAgentStore();
   const { roleAgents, roleRecommendations, triggerAgentAction } = useAgentIntegration(role);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState(initialActiveTab);
 
 
   const renderDashboardContent = () => {
