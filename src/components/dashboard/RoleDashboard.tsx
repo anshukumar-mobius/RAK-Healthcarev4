@@ -12,6 +12,44 @@ import {
   ClipboardList,
   Heart,
   Thermometer
+  Stethoscope,
+  FileText,
+  AlertTriangle,
+  Phone,
+  MessageSquare,
+  Settings,
+  BarChart3,
+  PieChart,
+  TrendingDown,
+  Shield,
+  DollarSign,
+  CreditCard,
+  Receipt,
+  FileCheck,
+  UserCheck,
+  Building,
+  MapPin,
+  Printer,
+  Download,
+  Upload,
+  Search,
+  Filter,
+  RefreshCw,
+  Bell,
+  Mail,
+  Calendar as CalendarIcon,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  Star,
+  Award,
+  Target,
+  Zap,
+  Database,
+  Monitor,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuthStore } from '../../stores/authStore';
@@ -34,34 +72,44 @@ interface RoleDashboardProps {
 // Mock data - in a real app, this would come from APIs
 const mockKPIData = {
   admin: [
-    { title: t('bedOccupancy', 'en'), value: '85%', change: { value: 5, type: 'increase' as const }, icon: Bed, color: 'teal' as const },
-    { title: t('avgConsultationTime', 'en'), value: '24min', change: { value: 3, type: 'decrease' as const }, icon: Clock, color: 'blue' as const },
-    { title: t('doctorSuccessRate', 'en'), value: '94%', change: { value: 2, type: 'increase' as const }, icon: TrendingUp, color: 'green' as const },
-    { title: t('totalPatients', 'en'), value: '1,247', change: { value: 8, type: 'increase' as const }, icon: Users, color: 'yellow' as const }
+    { title: 'Hospital Occupancy', value: '87%', change: { value: 5, type: 'increase' as const }, icon: Building, color: 'blue' as const },
+    { title: 'Revenue Today', value: 'AED 245K', change: { value: 12, type: 'increase' as const }, icon: DollarSign, color: 'green' as const },
+    { title: 'Staff Efficiency', value: '94%', change: { value: 3, type: 'increase' as const }, icon: TrendingUp, color: 'teal' as const },
+    { title: 'Patient Satisfaction', value: '4.8/5', change: { value: 2, type: 'increase' as const }, icon: Star, color: 'yellow' as const },
+    { title: 'Emergency Response', value: '3.2min', change: { value: 8, type: 'decrease' as const }, icon: AlertTriangle, color: 'red' as const },
+    { title: 'System Uptime', value: '99.9%', change: { value: 0.1, type: 'increase' as const }, icon: Monitor, color: 'green' as const }
   ],
   doctor: [
-    { title: t('todayAppointments', 'en'), value: '12', icon: Calendar, color: 'blue' as const },
-    { title: t('urgentTasks', 'en'), value: '3', icon: CheckSquare, color: 'red' as const },
-    { title: t('pendingTests', 'en'), value: '7', icon: FlaskConical, color: 'yellow' as const },
-    { title: 'Patient Reviews', value: '98%', icon: TrendingUp, color: 'green' as const }
+    { title: 'Today\'s Patients', value: '18', icon: Users, color: 'blue' as const },
+    { title: 'Pending Consultations', value: '5', icon: Stethoscope, color: 'yellow' as const },
+    { title: 'Lab Results Review', value: '12', icon: FlaskConical, color: 'red' as const },
+    { title: 'Follow-up Required', value: '8', icon: Calendar, color: 'teal' as const },
+    { title: 'Patient Satisfaction', value: '4.9/5', icon: Star, color: 'green' as const },
+    { title: 'Avg Consultation', value: '22min', icon: Clock, color: 'blue' as const }
   ],
   nurse: [
-    { title: 'Assigned Patients', value: '18', icon: Users, color: 'teal' as const },
-    { title: 'Vitals Pending', value: '5', icon: Activity, color: 'yellow' as const },
-    { title: 'Medications Due', value: '12', icon: Clock, color: 'red' as const },
-    { title: 'Available Beds', value: '3', icon: Bed, color: 'green' as const }
+    { title: 'Assigned Patients', value: '24', icon: Users, color: 'blue' as const },
+    { title: 'Vitals Due', value: '8', icon: Activity, color: 'yellow' as const },
+    { title: 'Medications Pending', value: '15', icon: Thermometer, color: 'red' as const },
+    { title: 'Discharge Ready', value: '6', icon: UserCheck, color: 'green' as const },
+    { title: 'Critical Alerts', value: '2', icon: AlertTriangle, color: 'red' as const },
+    { title: 'Bed Turnover', value: '4', icon: Bed, color: 'teal' as const }
   ],
   receptionist: [
-    { title: 'Check-ins Today', value: '47', icon: UserPlus, color: 'blue' as const },
-    { title: 'Queue Length', value: '8', icon: ClipboardList, color: 'yellow' as const },
-    { title: 'Appointments Today', value: '52', icon: Calendar, color: 'teal' as const },
-    { title: 'Avg Wait Time', value: '12min', icon: Clock, color: 'green' as const }
+    { title: 'Today\'s Check-ins', value: '67', icon: UserPlus, color: 'blue' as const },
+    { title: 'Current Queue', value: '12', icon: ClipboardList, color: 'yellow' as const },
+    { title: 'Appointments Booked', value: '89', icon: Calendar, color: 'teal' as const },
+    { title: 'Insurance Verified', value: '45', icon: Shield, color: 'green' as const },
+    { title: 'No-shows Today', value: '3', icon: UserCheck, color: 'red' as const },
+    { title: 'Avg Wait Time', value: '8min', icon: Clock, color: 'green' as const }
   ],
   diagnostician: [
-    { title: t('pendingTests', 'en'), value: '23', icon: FlaskConical, color: 'yellow' as const },
-    { title: t('completedTests', 'en'), value: '156', icon: CheckSquare, color: 'green' as const },
-    { title: 'Urgent Results', value: '2', icon: Activity, color: 'red' as const },
-    { title: 'Equipment Status', value: '96%', icon: TrendingUp, color: 'blue' as const }
+    { title: 'Tests Pending', value: '34', icon: FlaskConical, color: 'yellow' as const },
+    { title: 'Results Ready', value: '28', icon: CheckSquare, color: 'green' as const },
+    { title: 'Critical Results', value: '4', icon: AlertTriangle, color: 'red' as const },
+    { title: 'Equipment Online', value: '98%', icon: Monitor, color: 'green' as const },
+    { title: 'Turnaround Time', value: '2.4hrs', icon: Clock, color: 'blue' as const },
+    { title: 'Quality Score', value: '99.2%', icon: Award, color: 'teal' as const }
   ]
 };
 
@@ -175,6 +223,98 @@ const mockTimelineEvents = [
   }
 ];
 
+// Industry-level mock data for detailed views
+const mockAdminData = {
+  departments: [
+    { name: 'Emergency', occupancy: 95, staff: 24, revenue: 45000, satisfaction: 4.7 },
+    { name: 'ICU', occupancy: 88, staff: 18, revenue: 78000, satisfaction: 4.9 },
+    { name: 'Cardiology', occupancy: 76, staff: 12, revenue: 56000, satisfaction: 4.8 },
+    { name: 'Orthopedics', occupancy: 82, staff: 15, revenue: 42000, satisfaction: 4.6 }
+  ],
+  financialMetrics: {
+    dailyRevenue: 245000,
+    monthlyRevenue: 6800000,
+    outstandingBills: 125000,
+    insuranceClaims: 89000
+  },
+  systemHealth: {
+    serverUptime: 99.9,
+    databasePerformance: 98.5,
+    networkLatency: 12,
+    backupStatus: 'Completed'
+  }
+};
+
+const mockDoctorData = {
+  todaySchedule: [
+    { time: '09:00', patient: 'Ahmed Al Rashid', type: 'Consultation', room: '201', status: 'completed' },
+    { time: '09:30', patient: 'Sarah Johnson', type: 'Follow-up', room: '201', status: 'in-progress' },
+    { time: '10:00', patient: 'Mohammed Ali', type: 'New Patient', room: '201', status: 'scheduled' },
+    { time: '10:30', patient: 'Fatima Hassan', type: 'Consultation', room: '201', status: 'scheduled' }
+  ],
+  pendingReviews: [
+    { patient: 'John Doe', test: 'Blood Work', priority: 'urgent', ordered: '2 hours ago' },
+    { patient: 'Lisa Brown', test: 'MRI Scan', priority: 'normal', ordered: '1 day ago' },
+    { patient: 'Mike Wilson', test: 'ECG', priority: 'urgent', ordered: '30 minutes ago' }
+  ],
+  patientAlerts: [
+    { patient: 'Ahmed Al Rashid', alert: 'Blood pressure elevated', severity: 'high' },
+    { patient: 'Sarah Johnson', alert: 'Medication due', severity: 'medium' }
+  ]
+};
+
+const mockNurseData = {
+  assignedPatients: [
+    { name: 'Ahmed Al Rashid', room: '201', condition: 'Stable', vitals: 'Due in 2hrs', medications: '3 pending' },
+    { name: 'Sarah Johnson', room: '202', condition: 'Critical', vitals: 'Overdue', medications: '1 pending' },
+    { name: 'Mohammed Ali', room: '203', condition: 'Stable', vitals: 'Completed', medications: 'None' }
+  ],
+  medicationSchedule: [
+    { time: '08:00', patient: 'Ahmed Al Rashid', medication: 'Lisinopril 10mg', status: 'completed' },
+    { time: '09:00', patient: 'Sarah Johnson', medication: 'Metformin 500mg', status: 'pending' },
+    { time: '10:00', patient: 'Mohammed Ali', medication: 'Aspirin 81mg', status: 'scheduled' }
+  ],
+  criticalAlerts: [
+    { patient: 'Sarah Johnson', alert: 'Blood pressure critical', time: '5 minutes ago' },
+    { patient: 'Ahmed Al Rashid', alert: 'Pain level 8/10', time: '15 minutes ago' }
+  ]
+};
+
+const mockReceptionistData = {
+  todayQueue: [
+    { number: 'Q001', patient: 'Ahmed Al Rashid', appointment: '09:00', status: 'checked-in', waitTime: '5 min' },
+    { number: 'Q002', patient: 'Sarah Johnson', appointment: '09:30', status: 'waiting', waitTime: '12 min' },
+    { number: 'Q003', patient: 'Mohammed Ali', appointment: '10:00', status: 'called', waitTime: '0 min' }
+  ],
+  insuranceVerifications: [
+    { patient: 'Ahmed Al Rashid', provider: 'ADNIC', status: 'verified', coverage: '100%' },
+    { patient: 'Sarah Johnson', provider: 'Daman', status: 'pending', coverage: 'Unknown' },
+    { patient: 'Mohammed Ali', provider: 'THIQA', status: 'verified', coverage: '80%' }
+  ],
+  appointmentRequests: [
+    { patient: 'Fatima Hassan', specialty: 'Cardiology', preferred: 'Dr. Ahmed', urgency: 'routine' },
+    { patient: 'Ali Mohammed', specialty: 'Orthopedics', preferred: 'Any', urgency: 'urgent' }
+  ]
+};
+
+const mockDiagnosticianData = {
+  equipmentStatus: [
+    { equipment: 'MRI Scanner 1', status: 'online', utilization: '85%', nextMaintenance: '2025-02-15' },
+    { equipment: 'CT Scanner 2', status: 'maintenance', utilization: '0%', nextMaintenance: '2025-01-10' },
+    { equipment: 'X-Ray Unit 3', status: 'online', utilization: '67%', nextMaintenance: '2025-03-01' }
+  ],
+  qualityMetrics: {
+    accuracyRate: 99.2,
+    retestRate: 1.8,
+    turnaroundTime: 2.4,
+    patientSatisfaction: 4.8
+  },
+  workloadDistribution: [
+    { technician: 'Tech. Ahmed Ali', tests: 12, completed: 10, pending: 2 },
+    { technician: 'Tech. Sarah Hassan', tests: 15, completed: 13, pending: 2 },
+    { technician: 'Tech. Mohammed Rashid', tests: 8, completed: 8, pending: 0 }
+  ]
+};
 export function RoleDashboard({ activeTab }: RoleDashboardProps) {
   const { role, language } = useApp();
   const user = useAuthStore(state => state.user);
@@ -188,7 +328,7 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
         return (
           <div className="space-y-6">
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
               {kpiData.map((kpi, index) => (
                 <KPICard
                   key={index}
@@ -201,21 +341,12 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
               ))}
             </div>
 
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Chart title="Patient Flow" type="line" />
-              <Chart title="Department Workload" type="bar" />
-            </div>
-
-            {/* Role-specific additional content */}
-            {(role === 'doctor' || role === 'nurse') && (
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  {t('myTasks', language)}
-                </h3>
-                <TaskBoard tasks={mockTasks} />
-              </div>
-            )}
+            {/* Role-specific detailed dashboard */}
+            {role === 'admin' && renderAdminDashboard()}
+            {role === 'doctor' && renderDoctorDashboard()}
+            {role === 'nurse' && renderNurseDashboard()}
+            {role === 'receptionist' && renderReceptionistDashboard()}
+            {role === 'diagnostician' && renderDiagnosticianDashboard()}
           </div>
         );
 
@@ -454,5 +585,422 @@ export function RoleDashboard({ activeTab }: RoleDashboardProps) {
     }
   };
 
+  // Industry-level detailed dashboard renderers
+  const renderAdminDashboard = () => (
+    <div className="space-y-6">
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Chart title="Patient Flow Trends" type="line" />
+        <Chart title="Department Revenue" type="bar" />
+      </div>
+
+      {/* Department Performance */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Department Performance</h3>
+          <div className="flex space-x-2">
+            <button className="px-3 py-1 text-sm bg-rak-primary-100 text-rak-primary-700 rounded-md">Export</button>
+            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md">Refresh</button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {mockAdminData.departments.map((dept, index) => (
+            <div key={index} className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">{dept.name}</h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Occupancy:</span>
+                  <span className="font-medium">{dept.occupancy}%</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Staff:</span>
+                  <span className="font-medium">{dept.staff}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Revenue:</span>
+                  <span className="font-medium">AED {dept.revenue.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Rating:</span>
+                  <span className="font-medium">{dept.satisfaction}/5</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Financial Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Financial Metrics</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Daily Revenue</span>
+              <span className="text-xl font-bold text-green-600">AED {mockAdminData.financialMetrics.dailyRevenue.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Monthly Revenue</span>
+              <span className="text-lg font-semibold">AED {mockAdminData.financialMetrics.monthlyRevenue.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Outstanding Bills</span>
+              <span className="text-lg font-semibold text-yellow-600">AED {mockAdminData.financialMetrics.outstandingBills.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Insurance Claims</span>
+              <span className="text-lg font-semibold text-blue-600">AED {mockAdminData.financialMetrics.insuranceClaims.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Health</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Server Uptime</span>
+              <span className="text-lg font-semibold text-green-600">{mockAdminData.systemHealth.serverUptime}%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Database Performance</span>
+              <span className="text-lg font-semibold text-green-600">{mockAdminData.systemHealth.databasePerformance}%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Network Latency</span>
+              <span className="text-lg font-semibold">{mockAdminData.systemHealth.networkLatency}ms</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Backup Status</span>
+              <span className="text-lg font-semibold text-green-600">{mockAdminData.systemHealth.backupStatus}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDoctorDashboard = () => (
+    <div className="space-y-6">
+      {/* Today's Schedule */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Today's Schedule</h3>
+          <div className="flex space-x-2">
+            <button className="px-3 py-1 text-sm bg-rak-primary-100 text-rak-primary-700 rounded-md">Add Patient</button>
+            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md">View Calendar</button>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {mockDoctorData.todaySchedule.map((appointment, index) => (
+            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className="text-sm font-medium text-gray-900 dark:text-white">{appointment.time}</div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{appointment.patient}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{appointment.type} • Room {appointment.room}</div>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                appointment.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                appointment.status === 'in-progress' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
+                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+              }`}>
+                {appointment.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Pending Reviews and Patient Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Pending Lab Reviews</h3>
+          <div className="space-y-3">
+            {mockDoctorData.pendingReviews.map((review, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{review.patient}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{review.test} • {review.ordered}</div>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  review.priority === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                }`}>
+                  {review.priority}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Patient Alerts</h3>
+          <div className="space-y-3">
+            {mockDoctorData.patientAlerts.map((alert, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{alert.patient}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{alert.alert}</div>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  alert.severity === 'high' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                }`}>
+                  {alert.severity}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Task Management */}
+      <TaskBoard tasks={mockTasks} />
+    </div>
+  );
+
+  const renderNurseDashboard = () => (
+    <div className="space-y-6">
+      {/* Assigned Patients */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Assigned Patients</h3>
+          <div className="flex space-x-2">
+            <button className="px-3 py-1 text-sm bg-rak-primary-100 text-rak-primary-700 rounded-md">Update Vitals</button>
+            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md">View All</button>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {mockNurseData.assignedPatients.map((patient, index) => (
+            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className="text-sm font-medium text-gray-900 dark:text-white">Room {patient.room}</div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{patient.name}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Condition: {patient.condition} • Vitals: {patient.vitals} • Meds: {patient.medications}
+                  </div>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                patient.condition === 'Critical' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+              }`}>
+                {patient.condition}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Medication Schedule and Critical Alerts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Medication Schedule</h3>
+          <div className="space-y-3">
+            {mockNurseData.medicationSchedule.map((med, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{med.time} - {med.patient}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">{med.medication}</div>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  med.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                  med.status === 'pending' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                }`}>
+                  {med.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Critical Alerts</h3>
+          <div className="space-y-3">
+            {mockNurseData.criticalAlerts.map((alert, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                <div>
+                  <div className="font-semibold text-red-800 dark:text-red-400">{alert.patient}</div>
+                  <div className="text-sm text-red-600 dark:text-red-300">{alert.alert}</div>
+                </div>
+                <div className="text-xs text-red-600 dark:text-red-400">{alert.time}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderReceptionistDashboard = () => (
+    <div className="space-y-6">
+      {/* Patient Queue */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Patient Queue</h3>
+          <div className="flex space-x-2">
+            <button className="px-3 py-1 text-sm bg-rak-primary-100 text-rak-primary-700 rounded-md">Check In</button>
+            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md">Call Next</button>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {mockReceptionistData.todayQueue.map((queue, index) => (
+            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className="text-sm font-medium text-gray-900 dark:text-white">{queue.number}</div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{queue.patient}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Appointment: {queue.appointment} • Wait: {queue.waitTime}
+                  </div>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                queue.status === 'checked-in' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                queue.status === 'waiting' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+              }`}>
+                {queue.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Insurance Verifications and Appointment Requests */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Insurance Verifications</h3>
+          <div className="space-y-3">
+            {mockReceptionistData.insuranceVerifications.map((insurance, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{insurance.patient}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {insurance.provider} • Coverage: {insurance.coverage}
+                  </div>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  insurance.status === 'verified' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                }`}>
+                  {insurance.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Appointment Requests</h3>
+          <div className="space-y-3">
+            {mockReceptionistData.appointmentRequests.map((request, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{request.patient}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {request.specialty} • Dr. {request.preferred}
+                  </div>
+                </div>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  request.urgency === 'urgent' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                  'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                }`}>
+                  {request.urgency}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderDiagnosticianDashboard = () => (
+    <div className="space-y-6">
+      {/* Equipment Status */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Equipment Status</h3>
+          <div className="flex space-x-2">
+            <button className="px-3 py-1 text-sm bg-rak-primary-100 text-rak-primary-700 rounded-md">Schedule Maintenance</button>
+            <button className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-md">View All</button>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {mockDiagnosticianData.equipmentStatus.map((equipment, index) => (
+            <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className={`w-3 h-3 rounded-full ${
+                  equipment.status === 'online' ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{equipment.equipment}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Utilization: {equipment.utilization} • Next Maintenance: {equipment.nextMaintenance}
+                  </div>
+                </div>
+              </div>
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                equipment.status === 'online' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+              }`}>
+                {equipment.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quality Metrics and Workload */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quality Metrics</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Accuracy Rate</span>
+              <span className="text-lg font-semibold text-green-600">{mockDiagnosticianData.qualityMetrics.accuracyRate}%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Retest Rate</span>
+              <span className="text-lg font-semibold text-yellow-600">{mockDiagnosticianData.qualityMetrics.retestRate}%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Turnaround Time</span>
+              <span className="text-lg font-semibold">{mockDiagnosticianData.qualityMetrics.turnaroundTime}hrs</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-600 dark:text-gray-400">Patient Satisfaction</span>
+              <span className="text-lg font-semibold text-green-600">{mockDiagnosticianData.qualityMetrics.patientSatisfaction}/5</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Workload Distribution</h3>
+          <div className="space-y-3">
+            {mockDiagnosticianData.workloadDistribution.map((tech, index) => (
+              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <div>
+                  <div className="font-semibold text-gray-900 dark:text-white">{tech.technician}</div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Total: {tech.tests} • Completed: {tech.completed} • Pending: {tech.pending}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                    {Math.round((tech.completed / tech.tests) * 100)}%
+                  </div>
+                  <div className="text-xs text-gray-500">Completion</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
   return <div className="space-y-6">{renderDashboardContent()}</div>;
 }
