@@ -11,7 +11,7 @@ import {
   UserPlus,
   ClipboardList,
   Heart,
-  Thermometer
+  Thermometer,
   Stethoscope,
   FileText,
   AlertTriangle,
