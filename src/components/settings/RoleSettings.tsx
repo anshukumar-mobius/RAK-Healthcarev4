@@ -28,7 +28,18 @@ import {
   Activity,
   FlaskConical,
   CreditCard,
-  UserPlus
+  UserPlus,
+  GraduationCap,
+  Award,
+  DollarSign,
+  Languages,
+  Briefcase,
+  Heart,
+  Building,
+  Users,
+  Zap,
+  Target,
+  TrendingUp
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuthStore } from '../../stores/authStore';
