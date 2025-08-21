@@ -705,11 +705,6 @@ export function RoleDashboard({ activeTab, setActiveTab }: RoleDashboardProps) {
       case 'settings':
         return <RoleSettings />;
       
-            <AgentDashboard />
-            <AutomationRules />
-          </div>
-        );
-
       default:
         return (
           <div className="text-center py-12">
