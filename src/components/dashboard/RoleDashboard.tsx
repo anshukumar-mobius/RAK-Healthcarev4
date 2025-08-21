@@ -697,9 +697,11 @@ export function RoleDashboard({ activeTab, setActiveTab }: RoleDashboardProps) {
 
       case 'ai-agents':
         return (
-      case 'settings':
-        return <RoleSettings />;
           <div className="space-y-6">
+            <AgentDashboard />
+          </div>
+        );
+      
       case 'settings':
         return <RoleSettings />;
       
