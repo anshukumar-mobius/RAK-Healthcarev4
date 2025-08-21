@@ -11,7 +11,7 @@ import {
   Bed,
   ClipboardList,
   Bot,
-  setttings
+  Settings
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { t } from '../../utils/translations';
