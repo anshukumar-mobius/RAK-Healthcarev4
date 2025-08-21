@@ -10,7 +10,8 @@ import {
   Activity,
   Bed,
   ClipboardList,
-  Bot
+  Bot,
+  setttings
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { t } from '../../utils/translations';
