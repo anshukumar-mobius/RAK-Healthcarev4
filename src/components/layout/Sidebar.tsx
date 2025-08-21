@@ -88,6 +88,12 @@ const menuItems: MenuItem[] = [
     label: 'AI Agents',
     key: 'ai-agents',
     roles: ['admin', 'doctor', 'nurse', 'receptionist', 'diagnostician']
+  },
+  {
+    icon: Settings,
+    label: 'Settings',
+    key: 'settings',
+    roles: ['admin', 'doctor', 'nurse', 'receptionist', 'diagnostician']
   }
 ];
 

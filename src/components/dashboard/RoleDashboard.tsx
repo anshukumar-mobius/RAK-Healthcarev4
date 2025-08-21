@@ -66,6 +66,7 @@ import { DiagnosticWorkflow } from '../diagnostics/DiagnosticWorkflow';
 import { EMRViewer } from '../emr/EMRViewer';
 import { PatientDetailView } from '../emr/PatientDetailView';
 import { AgentDashboard } from '../agents/AgentDashboard';
+import { RoleSettings } from '../settings/RoleSettings';
 import { AutomationRules } from '../agents/AutomationRules';
 import { useAgentStore } from '../../stores/agentStore';
 
@@ -697,6 +698,9 @@ export function RoleDashboard({ activeTab, setActiveTab }: RoleDashboardProps) {
       case 'ai-agents':
         return (
           <div className="space-y-6">
+      case 'settings':
+        return <RoleSettings />;
+      
             <AgentDashboard />
             <AutomationRules />
           </div>
