@@ -20,7 +20,16 @@ import {
   Zap,
   Shield,
   TrendingUp,
-  Info
+  Info,
+  Bot,
+  Users,
+  MessageSquare,
+  Wand2,
+  Sparkles,
+  StethoscopeIcon as Stethoscope,
+  UserCheck,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { useEMRStore } from '../../stores/emrStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -79,6 +88,20 @@ const MOCK_PATIENT_INSIGHTS = [
   { type: 'followup', title: 'Overdue Lab Work', description: 'HbA1c due for diabetic monitoring', priority: 'high' }
 ];
 
+// Mock conversation analysis results
+const MOCK_CONVERSATION_ANALYSIS = {
+  chiefComplaint: "Patient reports chest pain and shortness of breath for the past 2 days",
+  historyOfPresentIllness: "Patient describes the chest pain as sharp, located in the center of chest, worsening with deep breathing. Associated with mild shortness of breath, especially on exertion. No radiation to arms or jaw. No nausea or diaphoresis.",
+  reviewOfSystems: "Positive for chest pain and dyspnea. Negative for palpitations, syncope, leg swelling, or orthopnea. No fever, chills, or recent travel.",
+  physicalExamination: "Vital signs stable. Heart rate regular, no murmurs. Lungs clear to auscultation bilaterally. No peripheral edema. Chest wall tender to palpation over left costochondral junction.",
+  assessment: "Likely costochondritis based on physical examination findings and symptom description",
+  plan: "Recommend NSAIDs for pain relief, heat therapy, and follow-up if symptoms worsen or persist beyond one week",
+  suggestedIcdCodes: ['M94.0 - Chondrocostal junction syndrome'],
+  suggestedMedications: [
+    { name: 'Ibuprofen', dosage: '400mg', frequency: 'Every 6-8 hours as needed', indication: 'Anti-inflammatory for costochondritis' }
+  ]
+};
+
 export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormProps) {
   const user = useAuthStore(state => state.user);
   const { addEMREntry, updateEMREntry } = useEMRStore();
@@ -93,6 +116,14 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
     isMicrophoneAvailable
   } = useSpeechRecognition();
 
+  // Conversation and AI states
+  const [conversationMode, setConversationMode] = useState(false);
+  const [conversationTranscript, setConversationTranscript] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [conversationSpeakers, setConversationSpeakers] = useState<Array<{speaker: 'doctor' | 'patient', text: string, timestamp: string}>>([]);
+  
+  // Regular voice input states
   const [isRecording, setIsRecording] = useState(false);
   const [activeField, setActiveField] = useState<string>('');
   const [recordingField, setRecordingField] = useState<string>('');
@@ -171,18 +202,106 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
     }
   }, [entry]);
 
-  // Handle speech recognition transcript
+  // Handle speech recognition transcript for regular voice input
   useEffect(() => {
-    if (transcript && activeField && isRecording) {
+    if (transcript && activeField && isRecording && !conversationMode) {
       setFormData(prev => ({
         ...prev,
         [activeField]: prev[activeField as keyof typeof prev] + ' ' + transcript
       }));
     }
-  }, [transcript, activeField, isRecording]);
+  }, [transcript, activeField, isRecording, conversationMode]);
 
-  // Voice input handlers
+  // Handle conversation transcript
+  useEffect(() => {
+    if (transcript && conversationMode && listening) {
+      setConversationTranscript(prev => prev + ' ' + transcript);
+    }
+  }, [transcript, conversationMode, listening]);
+
+  // Conversation mode handlers
+  const startConversation = () => {
+    if (!browserSupportsSpeechRecognition) {
+      alert('Your browser does not support speech recognition. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (!isMicrophoneAvailable) {
+      alert('Microphone access is required for conversation recording. Please allow microphone permissions.');
+      return;
+    }
+
+    setConversationMode(true);
+    setConversationTranscript('');
+    setConversationSpeakers([]);
+    setAnalysisComplete(false);
+    resetTranscript();
+    
+    SpeechRecognition.startListening({ 
+      continuous: true,
+      language: 'en-US'
+    });
+
+    // Add initial message
+    addConversationMessage('doctor', 'Conversation started. Please begin your consultation.');
+  };
+
+  const stopConversation = () => {
+    setConversationMode(false);
+    SpeechRecognition.stopListening();
+    
+    if (conversationTranscript.trim()) {
+      analyzeConversation();
+    }
+  };
+
+  const addConversationMessage = (speaker: 'doctor' | 'patient', text: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setConversationSpeakers(prev => [...prev, { speaker, text, timestamp }]);
+  };
+
+  // Mock AI analysis of conversation
+  const analyzeConversation = async () => {
+    setIsAnalyzing(true);
+    
+    // Simulate AI processing time
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    
+    // Apply mock analysis results
+    setFormData(prev => ({
+      ...prev,
+      title: 'Consultation - Chest Pain Evaluation',
+      chiefComplaint: MOCK_CONVERSATION_ANALYSIS.chiefComplaint,
+      historyOfPresentIllness: MOCK_CONVERSATION_ANALYSIS.historyOfPresentIllness,
+      reviewOfSystems: MOCK_CONVERSATION_ANALYSIS.reviewOfSystems,
+      physicalExamination: MOCK_CONVERSATION_ANALYSIS.physicalExamination,
+      assessment: MOCK_CONVERSATION_ANALYSIS.assessment,
+      plan: MOCK_CONVERSATION_ANALYSIS.plan,
+      content: `Conversation transcript analyzed and clinical documentation auto-generated by AI Scribe Bot.\n\nFull transcript: ${conversationTranscript}`
+    }));
+
+    // Add suggested ICD codes and medications
+    setSelectedIcdCodes(MOCK_CONVERSATION_ANALYSIS.suggestedIcdCodes);
+    setSelectedMedications(MOCK_CONVERSATION_ANALYSIS.suggestedMedications);
+    
+    setIsAnalyzing(false);
+    setAnalysisComplete(true);
+
+    // Add AI recommendation
+    addRecommendation({
+      type: 'suggestion',
+      priority: 'high',
+      title: 'AI Scribe Analysis Complete',
+      description: `Conversation analyzed and clinical documentation auto-generated for ${patient.firstName} ${patient.lastName}`,
+      confidence: 94,
+      agentId: 'clinical-scribe-bot'
+    });
+  };
+
+  // Regular voice input handlers
   const startListening = (fieldName: string) => {
+    if (conversationMode) return;
+    
     if (!browserSupportsSpeechRecognition) {
       alert('Your browser does not support speech recognition. Please use Chrome, Edge, or Safari.');
       return;
@@ -319,6 +438,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
             type="button"
             onClick={stopListening}
             className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors animate-pulse"
+            disabled={conversationMode}
           >
             <MicOff className="w-4 h-4" />
             <span>Stop Recording</span>
@@ -327,8 +447,8 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
           <button
             type="button"
             onClick={() => startListening(fieldName)}
-            className="flex items-center space-x-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors"
-            disabled={isRecording}
+            className="flex items-center space-x-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={isRecording || conversationMode}
           >
             <Mic className="w-4 h-4" />
             <span>Voice Input</span>
@@ -365,7 +485,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
               <Brain className="w-8 h-8" />
               <div>
                 <h3 className="text-xl font-bold">
-                  {entry ? 'Edit EMR Entry' : 'AI-Powered EMR Entry'}
+                  {entry ? 'Edit EMR Entry' : 'AI-Powered EMR Entry with Scribe Bot'}
                 </h3>
                 <p className="text-rak-magenta-100">
                   Patient: {patient.firstName} {patient.lastName} • MRN: {patient.mrn}
@@ -381,7 +501,92 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
           </div>
         </div>
 
-        <div className="flex h-[calc(95vh-120px)]">
+        {/* Conversation Mode Controls */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-200 dark:border-blue-800 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Bot className="w-6 h-6 text-blue-600" />
+                <div>
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100">AI Scribe Bot</h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Record doctor-patient conversation for automatic documentation
+                  </p>
+                </div>
+              </div>
+              
+              {analysisComplete && (
+                <div className="flex items-center space-x-2 bg-green-100 dark:bg-green-900/20 px-3 py-1 rounded-full">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-medium text-green-800 dark:text-green-400">
+                    Analysis Complete
+                  </span>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              {!conversationMode ? (
+                <button
+                  type="button"
+                  onClick={startConversation}
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+                  disabled={isRecording}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Start Conversation</span>
+                </button>
+              ) : (
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
+                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="font-medium">Recording Conversation...</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={stopConversation}
+                    className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+                  >
+                    <MicOff className="w-4 h-4" />
+                    <span>Stop & Analyze</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Conversation Transcript Display */}
+          {conversationMode && (
+            <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 p-4 max-h-32 overflow-y-auto">
+              <div className="flex items-center space-x-2 mb-2">
+                <MessageSquare className="w-4 h-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Live Transcript</span>
+              </div>
+              <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-2 rounded border">
+                {conversationTranscript || 'Listening for conversation...'}
+              </div>
+            </div>
+          )}
+          
+          {/* Analysis Status */}
+          {isAnalyzing && (
+            <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <Loader2 className="w-5 h-5 text-yellow-600 animate-spin" />
+                <div>
+                  <h4 className="font-medium text-yellow-800 dark:text-yellow-400">
+                    AI Scribe Bot Analyzing Conversation...
+                  </h4>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Processing transcript and generating clinical documentation
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex h-[calc(95vh-200px)]">
           {/* Main Form */}
           <div className="flex-1 overflow-y-auto p-6">
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -426,7 +631,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Title *
                 </label>
-                <VoiceInputButton fieldName="title" label="Title" />
+                {!conversationMode && <VoiceInputButton fieldName="title" label="Title" />}
                 <input
                   type="text"
                   value={formData.title}
@@ -440,16 +645,26 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
               {/* Clinical Fields */}
               {formData.entryType === 'consultation' && (
                 <div className="space-y-6">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-                    Clinical Documentation
-                  </h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+                      Clinical Documentation
+                    </h4>
+                    {analysisComplete && (
+                      <div className="flex items-center space-x-2 bg-green-100 dark:bg-green-900/20 px-3 py-1 rounded-full">
+                        <Sparkles className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-800 dark:text-green-400">
+                          Auto-Generated by AI
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Chief Complaint */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Chief Complaint
                     </label>
-                    <VoiceInputButton fieldName="chiefComplaint" label="Chief Complaint" />
+                    {!conversationMode && <VoiceInputButton fieldName="chiefComplaint" label="Chief Complaint" />}
                     <textarea
                       value={formData.chiefComplaint}
                       onChange={(e) => setFormData(prev => ({ ...prev, chiefComplaint: e.target.value }))}
@@ -464,7 +679,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       History of Present Illness
                     </label>
-                    <VoiceInputButton fieldName="historyOfPresentIllness" label="HPI" />
+                    {!conversationMode && <VoiceInputButton fieldName="historyOfPresentIllness" label="HPI" />}
                     <textarea
                       value={formData.historyOfPresentIllness}
                       onChange={(e) => setFormData(prev => ({ ...prev, historyOfPresentIllness: e.target.value }))}
@@ -479,7 +694,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Review of Systems
                     </label>
-                    <VoiceInputButton fieldName="reviewOfSystems" label="ROS" />
+                    {!conversationMode && <VoiceInputButton fieldName="reviewOfSystems" label="ROS" />}
                     <textarea
                       value={formData.reviewOfSystems}
                       onChange={(e) => setFormData(prev => ({ ...prev, reviewOfSystems: e.target.value }))}
@@ -494,7 +709,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Physical Examination
                     </label>
-                    <VoiceInputButton fieldName="physicalExamination" label="Physical Exam" />
+                    {!conversationMode && <VoiceInputButton fieldName="physicalExamination" label="Physical Exam" />}
                     <textarea
                       value={formData.physicalExamination}
                       onChange={(e) => setFormData(prev => ({ ...prev, physicalExamination: e.target.value }))}
@@ -509,7 +724,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Assessment & Diagnosis
                     </label>
-                    <VoiceInputButton fieldName="assessment" label="Assessment" />
+                    {!conversationMode && <VoiceInputButton fieldName="assessment" label="Assessment" />}
                     <textarea
                       value={formData.assessment}
                       onChange={(e) => setFormData(prev => ({ ...prev, assessment: e.target.value }))}
@@ -524,7 +739,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Treatment Plan
                     </label>
-                    <VoiceInputButton fieldName="plan" label="Plan" />
+                    {!conversationMode && <VoiceInputButton fieldName="plan" label="Plan" />}
                     <textarea
                       value={formData.plan}
                       onChange={(e) => setFormData(prev => ({ ...prev, plan: e.target.value }))}
@@ -539,7 +754,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Differential Diagnosis
                     </label>
-                    <VoiceInputButton fieldName="differentialDiagnosis" label="Differential" />
+                    {!conversationMode && <VoiceInputButton fieldName="differentialDiagnosis" label="Differential" />}
                     <textarea
                       value={formData.differentialDiagnosis}
                       onChange={(e) => setFormData(prev => ({ ...prev, differentialDiagnosis: e.target.value }))}
@@ -644,7 +859,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Additional Notes
                 </label>
-                <VoiceInputButton fieldName="content" label="Content" />
+                {!conversationMode && <VoiceInputButton fieldName="content" label="Content" />}
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
@@ -659,7 +874,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Tags (comma-separated)
                 </label>
-                <VoiceInputButton fieldName="tags" label="Tags" />
+                {!conversationMode && <VoiceInputButton fieldName="tags" label="Tags" />}
                 <input
                   type="text"
                   value={formData.tags}
@@ -686,8 +901,8 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
                 </div>
               )}
 
-              {/* Current transcript display */}
-              {isRecording && transcript && (
+              {/* Current transcript display for regular voice input */}
+              {isRecording && transcript && !conversationMode && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <div className="flex items-start space-x-2">
                     <Mic className="w-5 h-5 text-blue-600 mt-0.5" />
@@ -745,6 +960,19 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
               </div>
 
               <div className="p-4 space-y-6">
+                {/* Scribe Bot Status */}
+                {conversationMode && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Bot className="w-5 h-5 text-blue-600" />
+                      <h5 className="font-semibold text-blue-900 dark:text-blue-100">Scribe Bot Active</h5>
+                    </div>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Recording conversation and preparing to auto-generate clinical documentation
+                    </p>
+                  </div>
+                )}
+
                 {/* Patient Insights */}
                 <div>
                   <h5 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
