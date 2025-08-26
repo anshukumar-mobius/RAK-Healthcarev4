@@ -1,32 +1,28 @@
 import React, { useState } from 'react';
 import { Shield, Eye, EyeOff, LogIn } from 'lucide-react';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuth } from '../../hooks/useAuth';
 import { useApp } from '../../contexts/AppContext';
 import { t } from '../../utils/translations';
 
 export function LoginForm() {
   const { language } = useApp();
-  const login = useAuthStore(state => state.login);
+  const { login, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError('');
 
     try {
       const success = await login(email, password);
       if (!success) {
-        setError('Invalid email or password');
+        setError('Invalid email or password. Please check your credentials and try again.');
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
-    } finally {
-      setIsLoading(false);
+      setError('Login failed. Please check your connection and try again.');
     }
   };
 
@@ -110,14 +106,17 @@ export function LoginForm() {
 
             {error && (
               <div className="bg-rak-error-50 dark:bg-rak-error-900/20 border border-rak-error-200 dark:border-rak-error-800 rounded-lg p-3">
-                <p className="text-sm text-rak-error-600 dark:text-rak-error-400">{error}</p>
+                <p className="text-sm text-rak-error-600 dark:text-rak-error-400 flex items-center">
+                  <Shield className="w-4 h-4 mr-2" />
+                  {error}
+                </p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-rak-magenta-600 to-rak-magenta-700 hover:from-rak-magenta-700 hover:to-rak-magenta-800 disabled:from-rak-magenta-400 disabled:to-rak-magenta-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+              className="w-full bg-gradient-to-r from-rak-magenta-600 to-rak-magenta-700 hover:from-rak-magenta-700 hover:to-rak-magenta-800 disabled:from-rak-magenta-400 disabled:to-rak-magenta-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

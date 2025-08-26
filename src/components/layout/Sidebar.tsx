@@ -14,6 +14,7 @@ import {
   Settings
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../hooks/useAuth';
 import { t } from '../../utils/translations';
 
 interface MenuItem {
@@ -104,9 +105,14 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
-  const { role, language, isRTL } = useApp();
+  const { language, isRTL } = useApp();
+  const { user, canAccessRoute } = useAuth();
 
-  const filteredMenuItems = menuItems.filter(item => item.roles.includes(role));
+  if (!user) return null;
+
+  const filteredMenuItems = menuItems.filter(item => 
+    item.roles.includes(user.role) && canAccessRoute(item.key)
+  );
 
   return (
     <aside className="w-56 bg-rak-white dark:bg-gray-900 border-r border-rak-beige-200 dark:border-gray-700 h-full overflow-y-auto shadow-sm">
@@ -139,7 +145,7 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               }`}
             >
               <Icon className="w-4 h-4" />
-              <span>{t(item.label, language)}</span>
+              <span>{t(item.label, language)} {user.role === 'admin' && item.key === 'settings' && '⚙️'}</span>
             </button>
           );
         })}

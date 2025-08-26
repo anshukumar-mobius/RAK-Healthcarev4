@@ -1,20 +1,12 @@
 import React from 'react';
 import { Bell, Moon, Sun, Globe, User, LogOut, Shield, Phone, Calendar, Search, Menu } from 'lucide-react';
-import { useApp, Role } from '../../contexts/AppContext';
-import { useAuthStore } from '../../stores/authStore';
+import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../hooks/useAuth';
 import { t } from '../../utils/translations';
 
-const roleOptions: { value: Role; label: string }[] = [
-  { value: 'admin', label: 'Admin' },
-  { value: 'doctor', label: 'Doctor' },
-  { value: 'nurse', label: 'Nurse' },
-  { value: 'receptionist', label: 'Receptionist' },
-  { value: 'diagnostician', label: 'Diagnostician' }
-];
-
 export function Header() {
-  const { role, setRole, language, setLanguage, theme, setTheme, isRTL } = useApp();
-  const { user, logout } = useAuthStore();
+  const { language, setLanguage, theme, setTheme, isRTL } = useApp();
+  const { user, logout } = useAuth();
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
 
   return (
@@ -83,18 +75,17 @@ export function Header() {
 
           {/* User Menu & Mobile Controls */}
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            {/* Role Selector */}
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as Role)}
-              className="bg-rak-white dark:bg-gray-800 border border-rak-beige-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm font-medium text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-rak-magenta-500"
-            >
-              {roleOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {t(option.value, language)}
-                </option>
-              ))}
-            </select>
+            {/* Role Display */}
+            {user && (
+              <div className="hidden md:flex items-center space-x-2 bg-rak-pink-50 dark:bg-gray-800 px-3 py-1 rounded-lg border border-rak-pink-200 dark:border-gray-600">
+                <div className={`w-2 h-2 rounded-full ${
+                  user.isActive ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <span className="text-sm font-medium text-rak-magenta-700 dark:text-rak-magenta-400 capitalize">
+                  {t(user.role, language)}
+                </span>
+              </div>
+            )}
 
             {/* Notifications */}
             <button 
@@ -113,7 +104,9 @@ export function Header() {
                 <p className="text-xs font-medium text-gray-900 dark:text-white">
                   {user?.name || 'Guest User'}
                 </p>
-                <p className="text-xs text-rak-secondary-600 dark:text-gray-400 capitalize">{t(role, language)}</p>
+                <p className="text-xs text-rak-secondary-600 dark:text-gray-400">
+                  {user?.department || 'No Department'}
+                </p>
               </div>
               <div className="flex items-center space-x-1 rtl:space-x-reverse">
                 {user?.avatar && (
