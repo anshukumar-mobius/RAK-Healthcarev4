@@ -2,170 +2,102 @@ import React, { useState, useEffect } from 'react';
 import { 
   Save, 
   X, 
-  Mic, 
-  MicOff, 
-  Volume2, 
-  Pause, 
-  Play, 
-  Brain, 
+  Bot, 
+  Lightbulb, 
   AlertTriangle, 
   CheckCircle, 
-  Lightbulb,
-  Search,
-  Clock,
-  User,
-  Pill,
+  Clock, 
+  User, 
   Activity,
+  Stethoscope,
   FileText,
-  Zap,
-  Shield,
+  Pill,
+  Target,
   TrendingUp,
-  Info,
-  Bot,
-  Users,
-  MessageSquare,
-  Wand2,
-  Sparkles,
-  StethoscopeIcon as Stethoscope,
-  UserCheck,
-  Loader2,
-  RefreshCw
+  Shield,
+  Zap,
+  Play,
+  Pause,
+  Square,
+  Loader
 } from 'lucide-react';
+import { useApp } from '../../contexts/AppContext';
+import { useAuth } from '../../hooks/useAuth';
 import { useEMRStore } from '../../stores/emrStore';
-import { useAuthStore } from '../../stores/authStore';
 import { useAgentStore } from '../../stores/agentStore';
-import { Patient, EMREntry, ROLE_PERMISSIONS } from '../../types/emr';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { EMREntry } from '../../types/emr';
+import { t } from '../../utils/translations';
 
 // Import regenerator-runtime for async/await support
 import 'regenerator-runtime/runtime';
 
 interface EMREntryFormProps {
-  patient: Patient;
+  patientId: string;
   entry?: EMREntry | null;
-  onClose: () => void;
-  onSave: () => void;
+  onSave: (entry: Partial<EMREntry>) => void;
+  onCancel: () => void;
 }
 
-// Mock AI suggestions data
-const MOCK_ICD_CODES = [
-  { code: 'I10', description: 'Essential (primary) hypertension', confidence: 95 },
-  { code: 'E11.9', description: 'Type 2 diabetes mellitus without complications', confidence: 92 },
-  { code: 'J06.9', description: 'Acute upper respiratory infection, unspecified', confidence: 88 },
-  { code: 'M79.3', description: 'Panniculitis, unspecified', confidence: 85 },
-  { code: 'R50.9', description: 'Fever, unspecified', confidence: 82 }
-];
-
-const MOCK_MEDICATIONS = [
-  { name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily', indication: 'Hypertension', confidence: 94 },
-  { name: 'Metformin', dosage: '500mg', frequency: 'Twice daily', indication: 'Diabetes Type 2', confidence: 91 },
-  { name: 'Amoxicillin', dosage: '500mg', frequency: 'Three times daily', indication: 'Bacterial infection', confidence: 87 },
-  { name: 'Ibuprofen', dosage: '400mg', frequency: 'As needed', indication: 'Pain/inflammation', confidence: 85 }
-];
-
-const MOCK_DIFFERENTIAL_DIAGNOSES = [
-  { diagnosis: 'Viral upper respiratory infection', probability: 85, reasoning: 'Based on symptoms and seasonal patterns' },
-  { diagnosis: 'Bacterial sinusitis', probability: 65, reasoning: 'Prolonged symptoms with purulent discharge' },
-  { diagnosis: 'Allergic rhinitis', probability: 45, reasoning: 'Patient history of seasonal allergies' },
-  { diagnosis: 'COVID-19', probability: 25, reasoning: 'Current pandemic considerations' }
-];
-
-const MOCK_CLINICAL_GUIDELINES = [
-  { title: 'Hypertension Management Guidelines', recommendation: 'Consider ACE inhibitor as first-line therapy', source: 'AHA/ACC 2024' },
-  { title: 'Diabetes Care Standards', recommendation: 'HbA1c target <7% for most adults', source: 'ADA 2024' },
-  { title: 'Antibiotic Stewardship', recommendation: 'Avoid antibiotics for viral infections', source: 'CDC Guidelines' }
-];
-
-const MOCK_DRUG_INTERACTIONS = [
-  { drug1: 'Warfarin', drug2: 'Aspirin', severity: 'High', description: 'Increased bleeding risk' },
-  { drug1: 'Lisinopril', drug2: 'Potassium supplements', severity: 'Medium', description: 'Risk of hyperkalemia' }
-];
-
-const MOCK_PATIENT_INSIGHTS = [
-  { type: 'trend', title: 'Blood Pressure Trending Up', description: 'Last 3 readings show increasing trend', priority: 'high' },
-  { type: 'allergy', title: 'Penicillin Allergy Alert', description: 'Patient has documented penicillin allergy', priority: 'critical' },
-  { type: 'medication', title: 'Medication Adherence', description: '85% adherence rate based on refill history', priority: 'medium' },
-  { type: 'followup', title: 'Overdue Lab Work', description: 'HbA1c due for diabetic monitoring', priority: 'high' }
-];
-
-// Mock conversation analysis results
-const MOCK_CONVERSATION_ANALYSIS = {
-  chiefComplaint: "Patient reports chest pain and shortness of breath for the past 2 days",
-  historyOfPresentIllness: "Patient describes the chest pain as sharp, located in the center of chest, worsening with deep breathing. Associated with mild shortness of breath, especially on exertion. No radiation to arms or jaw. No nausea or diaphoresis.",
-  reviewOfSystems: "Positive for chest pain and dyspnea. Negative for palpitations, syncope, leg swelling, or orthopnea. No fever, chills, or recent travel.",
-  physicalExamination: "Vital signs stable. Heart rate regular, no murmurs. Lungs clear to auscultation bilaterally. No peripheral edema. Chest wall tender to palpation over left costochondral junction.",
-  assessment: "Likely costochondritis based on physical examination findings and symptom description",
-  plan: "Recommend NSAIDs for pain relief, heat therapy, and follow-up if symptoms worsen or persist beyond one week",
-  suggestedIcdCodes: ['M94.0 - Chondrocostal junction syndrome'],
-  suggestedMedications: [
-    { name: 'Ibuprofen', dosage: '400mg', frequency: 'Every 6-8 hours as needed', indication: 'Anti-inflammatory for costochondritis' }
-  ]
-};
-
-export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormProps) {
-  const user = useAuthStore(state => state.user);
+export function EMREntryForm({ patientId, entry, onSave, onCancel }: EMREntryFormProps) {
+  const { language, isRTL } = useApp();
+  const { user } = useAuth();
   const { addEMREntry, updateEMREntry } = useEMRStore();
-  const { addRecommendation } = useAgentStore();
-  
-  // Speech recognition setup
-  const {
-    transcript,
-    listening,
-    resetTranscript,
-    browserSupportsSpeechRecognition,
-    isMicrophoneAvailable
-  } = useSpeechRecognition();
+  const { triggerAgentAction, addRecommendation } = useAgentStore();
 
-  // Conversation and AI states
-  const [conversationMode, setConversationMode] = useState(false);
-  const [conversationTranscript, setConversationTranscript] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisComplete, setAnalysisComplete] = useState(false);
-  const [conversationSpeakers, setConversationSpeakers] = useState<Array<{speaker: 'doctor' | 'patient', text: string, timestamp: string}>>([]);
-  
-  // Regular voice input states
-  const [isRecording, setIsRecording] = useState(false);
-  const [activeField, setActiveField] = useState<string>('');
-  const [recordingField, setRecordingField] = useState<string>('');
-  const [showAISuggestions, setShowAISuggestions] = useState(true);
-  const [selectedIcdCodes, setSelectedIcdCodes] = useState<string[]>([]);
-  const [selectedMedications, setSelectedMedications] = useState<any[]>([]);
-  
   const [formData, setFormData] = useState({
     entryType: 'consultation' as EMREntry['entryType'],
     title: '',
     content: '',
-    status: 'draft' as EMREntry['status'],
-    tags: '',
-    // Clinical fields
     chiefComplaint: '',
     historyOfPresentIllness: '',
     reviewOfSystems: '',
     physicalExamination: '',
     assessment: '',
     plan: '',
-    differentialDiagnosis: '',
-    // Vital signs specific fields
-    temperature: '',
-    systolic: '',
-    diastolic: '',
-    heartRate: '',
-    respiratoryRate: '',
-    oxygenSaturation: '',
-    weight: '',
-    height: '',
-    painScale: '',
-    // Additional clinical fields
-    allergies: '',
-    currentMedications: '',
-    socialHistory: '',
-    familyHistory: '',
-    followUpInstructions: '',
-    clinicalNotes: ''
+    icdCodes: '',
+    medications: '',
+    priority: 'routine' as 'routine' | 'urgent' | 'emergent',
+    followUpRequired: false,
+    followUpDate: '',
+    tags: ''
   });
 
-  const permissions = user ? ROLE_PERMISSIONS[user.role] : null;
-  const allowedEntryTypes = permissions?.entryTypes || [];
+  const [isConversationRecording, setIsConversationRecording] = useState(false);
+  const [conversationTranscript, setConversationTranscript] = useState('');
+  const [isProcessingConversation, setIsProcessingConversation] = useState(false);
+
+  // Mock AI suggestions data
+  const mockAISuggestions = {
+    icdCodes: [
+      { code: 'I10', description: 'Essential hypertension', confidence: 94 },
+      { code: 'E11.9', description: 'Type 2 diabetes mellitus without complications', confidence: 87 },
+      { code: 'Z00.00', description: 'Encounter for general adult medical examination', confidence: 76 }
+    ],
+    medications: [
+      { name: 'Lisinopril', dosage: '10mg', frequency: 'Once daily', indication: 'Hypertension', confidence: 92 },
+      { name: 'Metformin', dosage: '500mg', frequency: 'Twice daily', indication: 'Type 2 Diabetes', confidence: 89 }
+    ],
+    differentialDx: [
+      { diagnosis: 'Essential Hypertension', probability: 85, reasoning: 'Elevated BP readings, family history' },
+      { diagnosis: 'Secondary Hypertension', probability: 15, reasoning: 'Consider if resistant to treatment' }
+    ],
+    clinicalGuidelines: [
+      { title: '2017 ACC/AHA Hypertension Guidelines', recommendation: 'Target BP <130/80 for most adults', source: 'AHA/ACC' },
+      { title: 'ADA Diabetes Guidelines', recommendation: 'HbA1c target <7% for most adults', source: 'ADA' }
+    ],
+    patientInsights: [
+      { type: 'trend', title: 'Blood Pressure Trending Up', description: 'Last 3 visits show increasing systolic BP', priority: 'high' },
+      { type: 'alert', title: 'Medication Adherence', description: 'Patient reported missing doses occasionally', priority: 'medium' }
+    ],
+    drugInteractions: [
+      { drugs: ['Lisinopril', 'Potassium Supplements'], severity: 'moderate', description: 'May increase potassium levels' }
+    ],
+    allergyAlerts: [
+      { medication: 'Penicillin', severity: 'severe', reaction: 'Anaphylaxis - documented allergy' }
+    ]
+  };
+
+  const [appliedSuggestions, setAppliedSuggestions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (entry) {
@@ -173,212 +105,40 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
         entryType: entry.entryType,
         title: entry.title,
         content: entry.content,
-        status: entry.status,
-        tags: entry.tags?.join(', ') || '',
-        chiefComplaint: entry.clinicalNotes?.chiefComplaint || '',
-        historyOfPresentIllness: entry.clinicalNotes?.historyOfPresentIllness || '',
-        reviewOfSystems: entry.clinicalNotes?.reviewOfSystems || '',
-        physicalExamination: entry.clinicalNotes?.physicalExamination || '',
-        assessment: entry.clinicalNotes?.assessment || '',
-        plan: entry.clinicalNotes?.plan || '',
-        differentialDiagnosis: entry.clinicalNotes?.differentialDiagnosis?.join(', ') || '',
-        // Extract vital signs data if present
-        temperature: entry.data?.temperature?.toString() || '',
-        systolic: entry.data?.bloodPressure?.systolic?.toString() || '',
-        diastolic: entry.data?.bloodPressure?.diastolic?.toString() || '',
-        heartRate: entry.data?.heartRate?.toString() || '',
-        respiratoryRate: entry.data?.respiratoryRate?.toString() || '',
-        oxygenSaturation: entry.data?.oxygenSaturation?.toString() || '',
-        weight: entry.data?.weight?.toString() || '',
-        height: entry.data?.height?.toString() || '',
-        painScale: entry.data?.painScale?.toString() || '',
-        allergies: '',
-        currentMedications: '',
-        socialHistory: '',
-        familyHistory: '',
-        followUpInstructions: '',
-        clinicalNotes: ''
+        chiefComplaint: entry.data?.chiefComplaint || '',
+        historyOfPresentIllness: entry.data?.historyOfPresentIllness || '',
+        reviewOfSystems: entry.data?.reviewOfSystems || '',
+        physicalExamination: entry.data?.physicalExamination || '',
+        assessment: entry.data?.assessment || '',
+        plan: entry.data?.plan || '',
+        icdCodes: entry.data?.icdCodes || '',
+        medications: entry.data?.medications || '',
+        priority: entry.priority || 'routine',
+        followUpRequired: entry.followUpRequired || false,
+        followUpDate: entry.followUpDate || '',
+        tags: entry.tags?.join(', ') || ''
       });
     }
   }, [entry]);
 
-  // Handle speech recognition transcript for regular voice input
-  useEffect(() => {
-    if (transcript && activeField && isRecording && !conversationMode) {
-      setFormData(prev => ({
-        ...prev,
-        [activeField]: prev[activeField as keyof typeof prev] + ' ' + transcript
-      }));
-    }
-  }, [transcript, activeField, isRecording, conversationMode]);
-
-  // Handle conversation transcript
-  useEffect(() => {
-    if (transcript && conversationMode && listening) {
-      setConversationTranscript(prev => prev + ' ' + transcript);
-    }
-  }, [transcript, conversationMode, listening]);
-
-  // Conversation mode handlers
-  const startConversation = () => {
-    if (!browserSupportsSpeechRecognition) {
-      alert('Your browser does not support speech recognition. Please use Chrome, Edge, or Safari.');
-      return;
-    }
-
-    if (!isMicrophoneAvailable) {
-      alert('Microphone access is required for conversation recording. Please allow microphone permissions.');
-      return;
-    }
-
-    setConversationMode(true);
-    setConversationTranscript('');
-    setConversationSpeakers([]);
-    setAnalysisComplete(false);
-    resetTranscript();
-    
-    SpeechRecognition.startListening({ 
-      continuous: true,
-      language: 'en-US'
-    });
-
-    // Add initial message
-    addConversationMessage('doctor', 'Conversation started. Please begin your consultation.');
-  };
-
-  const stopConversation = () => {
-    setConversationMode(false);
-    SpeechRecognition.stopListening();
-    
-    if (conversationTranscript.trim()) {
-      analyzeConversation();
-    }
-  };
-
-  const addConversationMessage = (speaker: 'doctor' | 'patient', text: string) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setConversationSpeakers(prev => [...prev, { speaker, text, timestamp }]);
-  };
-
-  // Mock AI analysis of conversation
-  const analyzeConversation = async () => {
-    setIsAnalyzing(true);
-    
-    // Simulate AI processing time
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    // Apply mock analysis results
-    setFormData(prev => ({
-      ...prev,
-      title: 'Consultation - Chest Pain Evaluation',
-      chiefComplaint: MOCK_CONVERSATION_ANALYSIS.chiefComplaint,
-      historyOfPresentIllness: MOCK_CONVERSATION_ANALYSIS.historyOfPresentIllness,
-      reviewOfSystems: MOCK_CONVERSATION_ANALYSIS.reviewOfSystems,
-      physicalExamination: MOCK_CONVERSATION_ANALYSIS.physicalExamination,
-      assessment: MOCK_CONVERSATION_ANALYSIS.assessment,
-      plan: MOCK_CONVERSATION_ANALYSIS.plan,
-      content: `Conversation transcript analyzed and clinical documentation auto-generated by AI Scribe Bot.\n\nFull transcript: ${conversationTranscript}`
-    }));
-
-    // Add suggested ICD codes and medications
-    setSelectedIcdCodes(MOCK_CONVERSATION_ANALYSIS.suggestedIcdCodes);
-    setSelectedMedications(MOCK_CONVERSATION_ANALYSIS.suggestedMedications);
-    
-    setIsAnalyzing(false);
-    setAnalysisComplete(true);
-
-    // Add AI recommendation
-    addRecommendation({
-      type: 'suggestion',
-      priority: 'high',
-      title: 'AI Scribe Analysis Complete',
-      description: `Conversation analyzed and clinical documentation auto-generated for ${patient.firstName} ${patient.lastName}`,
-      confidence: 94,
-      agentId: 'clinical-scribe-bot'
-    });
-  };
-
-  // Regular voice input handlers
-  const startListening = (fieldName: string) => {
-    if (conversationMode) return;
-    
-    if (!browserSupportsSpeechRecognition) {
-      alert('Your browser does not support speech recognition. Please use Chrome, Edge, or Safari.');
-      return;
-    }
-
-    if (!isMicrophoneAvailable) {
-      alert('Microphone access is required for voice input. Please allow microphone permissions.');
-      return;
-    }
-
-    setActiveField(fieldName);
-    setRecordingField(fieldName);
-    setIsRecording(true);
-    resetTranscript();
-    
-    SpeechRecognition.startListening({ 
-      continuous: true,
-      language: 'en-US'
-    });
-  };
-
-  const stopListening = () => {
-    setIsRecording(false);
-    setActiveField('');
-    setRecordingField('');
-    SpeechRecognition.stopListening();
-  };
-
-  const clearTranscript = (fieldName: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: ''
-    }));
-    resetTranscript();
-  };
-
-  // AI suggestion handlers
-  const applyIcdCode = (code: any) => {
-    if (!selectedIcdCodes.includes(code.code)) {
-      setSelectedIcdCodes([...selectedIcdCodes, code.code]);
-      setFormData(prev => ({
-        ...prev,
-        assessment: prev.assessment + (prev.assessment ? ', ' : '') + `${code.code} - ${code.description}`
-      }));
-    }
-  };
-
-  const applyMedication = (medication: any) => {
-    if (!selectedMedications.find(m => m.name === medication.name)) {
-      setSelectedMedications([...selectedMedications, medication]);
-      setFormData(prev => ({
-        ...prev,
-        plan: prev.plan + (prev.plan ? '\n' : '') + `${medication.name} ${medication.dosage} ${medication.frequency} for ${medication.indication}`
-      }));
-    }
-  };
-
-  const applyDifferentialDiagnosis = (diagnosis: any) => {
-    setFormData(prev => ({
-      ...prev,
-      differentialDiagnosis: prev.differentialDiagnosis + (prev.differentialDiagnosis ? ', ' : '') + diagnosis.diagnosis
-    }));
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) return;
-
-    const entryData: Omit<EMREntry, 'id' | 'createdAt' | 'updatedAt'> = {
-      patientId: patient.id,
+    const entryData = {
+      patientId,
       entryType: formData.entryType,
       title: formData.title,
       content: formData.content,
-      status: formData.status,
-      createdBy: user.id,
-      tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : undefined,
+      data: {
+        chiefComplaint: formData.chiefComplaint,
+        historyOfPresentIllness: formData.historyOfPresentIllness,
+        reviewOfSystems: formData.reviewOfSystems,
+        physicalExamination: formData.physicalExamination,
+        assessment: formData.assessment,
+        plan: formData.plan,
+        icdCodes: formData.icdCodes,
+        medications: formData.medications
+      },
       clinicalNotes: {
         chiefComplaint: formData.chiefComplaint,
         historyOfPresentIllness: formData.historyOfPresentIllness,
@@ -386,789 +146,736 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
         physicalExamination: formData.physicalExamination,
         assessment: formData.assessment,
         plan: formData.plan,
-        differentialDiagnosis: formData.differentialDiagnosis ? formData.differentialDiagnosis.split(',').map(d => d.trim()) : undefined,
-        icdCodes: selectedIcdCodes
-      }
+        icdCodes: formData.icdCodes
+      },
+      priority: formData.priority,
+      followUpRequired: formData.followUpRequired,
+      followUpDate: formData.followUpDate,
+      tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      createdBy: user?.id || '',
+      status: 'draft' as const
     };
 
-    // Add structured data based on entry type
-    if (formData.entryType === 'vital_signs') {
-      entryData.data = {
-        temperature: formData.temperature ? parseFloat(formData.temperature) : undefined,
-        bloodPressure: formData.systolic && formData.diastolic ? {
-          systolic: parseInt(formData.systolic),
-          diastolic: parseInt(formData.diastolic)
-        } : undefined,
-        heartRate: formData.heartRate ? parseInt(formData.heartRate) : undefined,
-        respiratoryRate: formData.respiratoryRate ? parseInt(formData.respiratoryRate) : undefined,
-        oxygenSaturation: formData.oxygenSaturation ? parseInt(formData.oxygenSaturation) : undefined,
-        weight: formData.weight ? parseFloat(formData.weight) : undefined,
-        height: formData.height ? parseFloat(formData.height) : undefined,
-        painScale: formData.painScale ? parseInt(formData.painScale) : undefined,
-        bmi: formData.weight && formData.height ? 
-          parseFloat(formData.weight) / Math.pow(parseFloat(formData.height) / 100, 2) : undefined
-      };
-    }
-
-    if (entry) {
-      updateEMREntry(entry.id, entryData);
-    } else {
-      addEMREntry(entryData);
-    }
-
-    // Add AI recommendation for clinical decision support
-    addRecommendation({
-      type: 'suggestion',
-      priority: 'medium',
-      title: 'EMR Entry Created with AI Assistance',
-      description: `New ${formData.entryType} entry created for ${patient.firstName} ${patient.lastName} with AI-powered suggestions`,
-      confidence: 92,
-      agentId: 'clinical-decision-support'
-    });
-
-    onSave();
+    onSave(entryData);
   };
 
-  // Voice input button component
-  const VoiceInputButton = ({ fieldName, label }: { fieldName: string; label: string }) => (
-    <div className="flex items-center space-x-2">
-      <div className="flex items-center space-x-1">
-        {isRecording && recordingField === fieldName ? (
-          <button
-            type="button"
-            onClick={stopListening}
-            className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors animate-pulse"
-            disabled={conversationMode}
-          >
-            <MicOff className="w-4 h-4" />
-            <span>Stop Recording</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => startListening(fieldName)}
-            className="flex items-center space-x-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-            disabled={isRecording || conversationMode}
-          >
-            <Mic className="w-4 h-4" />
-            <span>Voice Input</span>
-          </button>
-        )}
-        
-        {formData[fieldName as keyof typeof formData] && (
-          <button
-            type="button"
-            onClick={() => clearTranscript(fieldName)}
-            className="flex items-center space-x-1 bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded-md text-sm transition-colors"
-          >
-            <X className="w-3 h-3" />
-          </button>
-        )}
-      </div>
+  const applySuggestion = (type: string, suggestion: any) => {
+    const suggestionId = `${type}-${JSON.stringify(suggestion)}`;
+    
+    switch (type) {
+      case 'icd':
+        setFormData(prev => ({
+          ...prev,
+          icdCodes: prev.icdCodes ? `${prev.icdCodes}, ${suggestion.code}` : suggestion.code
+        }));
+        break;
+      case 'medication':
+        const medText = `${suggestion.name} ${suggestion.dosage} ${suggestion.frequency}`;
+        setFormData(prev => ({
+          ...prev,
+          medications: prev.medications ? `${prev.medications}\n${medText}` : medText
+        }));
+        break;
+      case 'diagnosis':
+        setFormData(prev => ({
+          ...prev,
+          assessment: prev.assessment ? `${prev.assessment}\n${suggestion.diagnosis}` : suggestion.diagnosis
+        }));
+        break;
+    }
+    
+    setAppliedSuggestions(prev => new Set([...prev, suggestionId]));
+  };
+
+  const startConversationRecording = () => {
+    setIsConversationRecording(true);
+    setConversationTranscript('');
+    
+    // Mock conversation recording
+    setTimeout(() => {
+      const mockConversation = `
+Doctor: Good morning, how are you feeling today?
+Patient: I've been having some chest pain and shortness of breath, especially when I walk upstairs.
+Doctor: When did this start?
+Patient: About two weeks ago. It's getting worse.
+Doctor: Any family history of heart disease?
+Patient: Yes, my father had a heart attack at 55.
+Doctor: Let me examine you. Your blood pressure is 150/95, which is elevated.
+Patient: Is that bad?
+Doctor: We need to monitor it. I'm going to prescribe Lisinopril 10mg once daily and order some tests.
+      `;
+      setConversationTranscript(mockConversation);
+    }, 3000);
+  };
+
+  const stopConversationRecording = () => {
+    setIsConversationRecording(false);
+    setIsProcessingConversation(true);
+    
+    // Mock AI processing
+    setTimeout(() => {
+      // Auto-populate fields based on conversation
+      setFormData(prev => ({
+        ...prev,
+        chiefComplaint: 'Chest pain and shortness of breath on exertion',
+        historyOfPresentIllness: 'Patient reports onset of chest pain and dyspnea on exertion approximately 2 weeks ago with progressive worsening. Symptoms occur primarily with physical activity such as climbing stairs.',
+        reviewOfSystems: 'Cardiovascular: Positive for chest pain and dyspnea on exertion. Negative for palpitations, syncope, or orthopnea.',
+        physicalExamination: 'Vital Signs: BP 150/95 mmHg. General: Alert and oriented, no acute distress.',
+        assessment: 'Hypertension, newly diagnosed. Chest pain, likely related to elevated blood pressure. Family history of coronary artery disease.',
+        plan: 'Start Lisinopril 10mg once daily. Order ECG and basic metabolic panel. Follow-up in 2 weeks to reassess blood pressure control.',
+        icdCodes: 'I10',
+        medications: 'Lisinopril 10mg once daily'
+      }));
       
-      {isRecording && recordingField === fieldName && (
-        <div className="flex items-center space-x-2 text-sm text-blue-600">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-          <span>Listening... Speak clearly</span>
-        </div>
-      )}
-    </div>
-  );
+      setIsProcessingConversation(false);
+      
+      // Add recommendation
+      addRecommendation({
+        type: 'suggestion',
+        priority: 'medium',
+        title: 'Clinical Documentation Generated',
+        description: 'AI Scribe has automatically populated clinical fields based on the doctor-patient conversation',
+        confidence: 94,
+        agentId: 'clinical-scribe-bot'
+      });
+    }, 5000);
+  };
+
+  const clearConversation = () => {
+    setConversationTranscript('');
+    setIsConversationRecording(false);
+    setIsProcessingConversation(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-7xl w-full max-h-[95vh] overflow-hidden shadow-2xl">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="bg-gradient-to-r from-rak-magenta-600 to-rak-magenta-700 p-6 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Brain className="w-8 h-8" />
-              <div>
-                <h3 className="text-xl font-bold">
-                  {entry ? 'Edit EMR Entry' : 'AI-Powered EMR Entry with Scribe Bot'}
-                </h3>
-                <p className="text-rak-magenta-100">
-                  Patient: {patient.firstName} {patient.lastName} • MRN: {patient.mrn}
-                </p>
-              </div>
+            <div>
+              <h2 className="text-2xl font-bold">
+                {entry ? 'Edit EMR Entry' : 'New EMR Entry'}
+              </h2>
+              <p className="text-rak-magenta-100 mt-1">
+                AI-Enhanced Clinical Documentation
+              </p>
             </div>
             <button
-              onClick={onClose}
-              className="text-white hover:text-rak-magenta-200 transition-colors"
+              onClick={onCancel}
+              className="p-2 hover:bg-rak-magenta-800 rounded-lg transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
         </div>
 
-        {/* Conversation Mode Controls */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-blue-200 dark:border-blue-800 p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Bot className="w-6 h-6 text-blue-600" />
-                <div>
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100">AI Scribe Bot</h4>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    Record doctor-patient conversation for automatic documentation
-                  </p>
-                </div>
-              </div>
-              
-              {analysisComplete && (
-                <div className="flex items-center space-x-2 bg-green-100 dark:bg-green-900/20 px-3 py-1 rounded-full">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-800 dark:text-green-400">
-                    Analysis Complete
-                  </span>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              {!conversationMode ? (
-                <button
-                  type="button"
-                  onClick={startConversation}
-                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-                  disabled={isRecording}
-                >
-                  <Users className="w-4 h-4" />
-                  <span>Start Conversation</span>
-                </button>
-              ) : (
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
-                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                    <span className="font-medium">Recording Conversation...</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={stopConversation}
-                    className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
-                  >
-                    <MicOff className="w-4 h-4" />
-                    <span>Stop & Analyze</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Conversation Transcript Display */}
-          {conversationMode && (
-            <div className="mt-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 p-4 max-h-32 overflow-y-auto">
-              <div className="flex items-center space-x-2 mb-2">
-                <MessageSquare className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Live Transcript</span>
-              </div>
-              <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-2 rounded border">
-                {conversationTranscript || 'Listening for conversation...'}
-              </div>
-            </div>
-          )}
-          
-          {/* Analysis Status */}
-          {isAnalyzing && (
-            <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <div className="flex items-center space-x-3">
-                <Loader2 className="w-5 h-5 text-yellow-600 animate-spin" />
-                <div>
-                  <h4 className="font-medium text-yellow-800 dark:text-yellow-400">
-                    AI Scribe Bot Analyzing Conversation...
-                  </h4>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    Processing transcript and generating clinical documentation
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="flex h-[calc(95vh-200px)]">
+        <div className="flex h-[calc(95vh-120px)]">
           {/* Main Form */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 p-6 overflow-y-auto">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Entry Type and Status */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* AI Scribe Bot Section */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <Bot className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">AI Scribe Bot</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Record doctor-patient conversation for automatic documentation
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    {!isConversationRecording && !isProcessingConversation && (
+                      <button
+                        type="button"
+                        onClick={startConversationRecording}
+                        className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                      >
+                        <Play className="w-4 h-4" />
+                        <span>Start Conversation</span>
+                      </button>
+                    )}
+                    
+                    {isConversationRecording && (
+                      <button
+                        type="button"
+                        onClick={stopConversationRecording}
+                        className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors animate-pulse"
+                      >
+                        <Square className="w-4 h-4" />
+                        <span>Stop Recording</span>
+                      </button>
+                    )}
+                    
+                    {conversationTranscript && !isProcessingConversation && (
+                      <button
+                        type="button"
+                        onClick={clearConversation}
+                        className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Clear</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Recording Status */}
+                {isConversationRecording && (
+                  <div className="flex items-center space-x-2 mb-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-red-700 dark:text-red-400 font-medium">Recording conversation...</span>
+                  </div>
+                )}
+                
+                {/* Processing Status */}
+                {isProcessingConversation && (
+                  <div className="flex items-center space-x-2 mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <Loader className="w-4 h-4 text-blue-600 animate-spin" />
+                    <span className="text-blue-700 dark:text-blue-400 font-medium">AI is analyzing conversation and generating clinical notes...</span>
+                  </div>
+                )}
+                
+                {/* Conversation Transcript */}
+                {conversationTranscript && (
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 max-h-40 overflow-y-auto">
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">Conversation Transcript:</h4>
+                    <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                      {conversationTranscript}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Entry Type *
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Entry Type
                   </label>
                   <select
                     value={formData.entryType}
-                    onChange={(e) => setFormData(prev => ({ ...prev, entryType: e.target.value as EMREntry['entryType'] }))}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
+                    onChange={(e) => setFormData(prev => ({ ...prev, entryType: e.target.value as any }))}
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors"
                     required
                   >
-                    {allowedEntryTypes.map(type => (
-                      <option key={type} value={type}>
-                        {type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      </option>
-                    ))}
+                    <option value="consultation">Consultation</option>
+                    <option value="nursing_note">Nursing Note</option>
+                    <option value="diagnostic_result">Diagnostic Result</option>
+                    <option value="medication">Medication</option>
+                    <option value="vital_signs">Vital Signs</option>
+                    <option value="procedure">Procedure</option>
+                    <option value="discharge_summary">Discharge Summary</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Status
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Priority
                   </label>
                   <select
-                    value={formData.status}
-                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as EMREntry['status'] }))}
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
+                    value={formData.priority}
+                    onChange={(e) => setFormData(prev => ({ ...prev, priority: e.target.value as any }))}
+                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors"
                   >
-                    <option value="draft">Draft</option>
-                    <option value="final">Final</option>
-                    <option value="amended">Amended</option>
+                    <option value="routine">Routine</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="emergent">Emergent</option>
                   </select>
                 </div>
               </div>
 
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Title *
-                </label>
-                {!conversationMode && <VoiceInputButton fieldName="title" label="Title" />}
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Title
+                  </label>
+                </div>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                  placeholder="Enter entry title"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors"
+                  placeholder="Enter entry title..."
                   required
                 />
               </div>
 
-              {/* Clinical Fields */}
-              {formData.entryType === 'consultation' && (
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
-                      Clinical Documentation
-                    </h4>
-                    {analysisComplete && (
-                      <div className="flex items-center space-x-2 bg-green-100 dark:bg-green-900/20 px-3 py-1 rounded-full">
-                        <Sparkles className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-800 dark:text-green-400">
-                          Auto-Generated by AI
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Chief Complaint */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Chief Complaint
-                    </label>
-                    {!conversationMode && <VoiceInputButton fieldName="chiefComplaint" label="Chief Complaint" />}
-                    <textarea
-                      value={formData.chiefComplaint}
-                      onChange={(e) => setFormData(prev => ({ ...prev, chiefComplaint: e.target.value }))}
-                      rows={2}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                      placeholder="Patient's primary concern or reason for visit"
-                    />
-                  </div>
-
-                  {/* History of Present Illness */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      History of Present Illness
-                    </label>
-                    {!conversationMode && <VoiceInputButton fieldName="historyOfPresentIllness" label="HPI" />}
-                    <textarea
-                      value={formData.historyOfPresentIllness}
-                      onChange={(e) => setFormData(prev => ({ ...prev, historyOfPresentIllness: e.target.value }))}
-                      rows={4}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                      placeholder="Detailed description of the current illness"
-                    />
-                  </div>
-
-                  {/* Review of Systems */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Review of Systems
-                    </label>
-                    {!conversationMode && <VoiceInputButton fieldName="reviewOfSystems" label="ROS" />}
-                    <textarea
-                      value={formData.reviewOfSystems}
-                      onChange={(e) => setFormData(prev => ({ ...prev, reviewOfSystems: e.target.value }))}
-                      rows={3}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                      placeholder="Systematic review of body systems"
-                    />
-                  </div>
-
-                  {/* Physical Examination */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Physical Examination
-                    </label>
-                    {!conversationMode && <VoiceInputButton fieldName="physicalExamination" label="Physical Exam" />}
-                    <textarea
-                      value={formData.physicalExamination}
-                      onChange={(e) => setFormData(prev => ({ ...prev, physicalExamination: e.target.value }))}
-                      rows={4}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                      placeholder="Physical examination findings"
-                    />
-                  </div>
-
-                  {/* Assessment */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Assessment & Diagnosis
-                    </label>
-                    {!conversationMode && <VoiceInputButton fieldName="assessment" label="Assessment" />}
-                    <textarea
-                      value={formData.assessment}
-                      onChange={(e) => setFormData(prev => ({ ...prev, assessment: e.target.value }))}
-                      rows={3}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                      placeholder="Clinical assessment and primary diagnosis"
-                    />
-                  </div>
-
-                  {/* Plan */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Treatment Plan
-                    </label>
-                    {!conversationMode && <VoiceInputButton fieldName="plan" label="Plan" />}
-                    <textarea
-                      value={formData.plan}
-                      onChange={(e) => setFormData(prev => ({ ...prev, plan: e.target.value }))}
-                      rows={4}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                      placeholder="Treatment plan, medications, follow-up instructions"
-                    />
-                  </div>
-
-                  {/* Differential Diagnosis */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Differential Diagnosis
-                    </label>
-                    {!conversationMode && <VoiceInputButton fieldName="differentialDiagnosis" label="Differential" />}
-                    <textarea
-                      value={formData.differentialDiagnosis}
-                      onChange={(e) => setFormData(prev => ({ ...prev, differentialDiagnosis: e.target.value }))}
-                      rows={2}
-                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                      placeholder="Alternative diagnoses to consider"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Vital Signs Fields */}
-              {formData.entryType === 'vital_signs' && (
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900 dark:text-white">Vital Signs</h4>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Temperature (°C)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={formData.temperature}
-                        onChange={(e) => setFormData(prev => ({ ...prev, temperature: e.target.value }))}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
-                        placeholder="36.5"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Systolic BP
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.systolic}
-                        onChange={(e) => setFormData(prev => ({ ...prev, systolic: e.target.value }))}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
-                        placeholder="120"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Diastolic BP
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.diastolic}
-                        onChange={(e) => setFormData(prev => ({ ...prev, diastolic: e.target.value }))}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
-                        placeholder="80"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Heart Rate (bpm)
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.heartRate}
-                        onChange={(e) => setFormData(prev => ({ ...prev, heartRate: e.target.value }))}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
-                        placeholder="72"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Respiratory Rate
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.respiratoryRate}
-                        onChange={(e) => setFormData(prev => ({ ...prev, respiratoryRate: e.target.value }))}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
-                        placeholder="16"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Oxygen Saturation (%)
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.oxygenSaturation}
-                        onChange={(e) => setFormData(prev => ({ ...prev, oxygenSaturation: e.target.value }))}
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
-                        placeholder="98"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* General Content */}
+              {/* Chief Complaint */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Additional Notes
-                </label>
-                {!conversationMode && <VoiceInputButton fieldName="content" label="Content" />}
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Chief Complaint
+                  </label>
+                </div>
+                <textarea
+                  value={formData.chiefComplaint}
+                  onChange={(e) => setFormData(prev => ({ ...prev, chiefComplaint: e.target.value }))}
+                  rows={2}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Patient's primary concern or reason for visit..."
+                />
+              </div>
+
+              {/* History of Present Illness */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    History of Present Illness
+                  </label>
+                </div>
+                <textarea
+                  value={formData.historyOfPresentIllness}
+                  onChange={(e) => setFormData(prev => ({ ...prev, historyOfPresentIllness: e.target.value }))}
+                  rows={4}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Detailed description of the patient's current illness..."
+                />
+              </div>
+
+              {/* Review of Systems */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Review of Systems
+                  </label>
+                </div>
+                <textarea
+                  value={formData.reviewOfSystems}
+                  onChange={(e) => setFormData(prev => ({ ...prev, reviewOfSystems: e.target.value }))}
+                  rows={3}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Systematic review of body systems..."
+                />
+              </div>
+
+              {/* Physical Examination */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Physical Examination
+                  </label>
+                </div>
+                <textarea
+                  value={formData.physicalExamination}
+                  onChange={(e) => setFormData(prev => ({ ...prev, physicalExamination: e.target.value }))}
+                  rows={4}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Physical examination findings..."
+                />
+              </div>
+
+              {/* Assessment */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Assessment & Diagnosis
+                  </label>
+                </div>
+                <textarea
+                  value={formData.assessment}
+                  onChange={(e) => setFormData(prev => ({ ...prev, assessment: e.target.value }))}
+                  rows={3}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Clinical assessment and diagnosis..."
+                />
+              </div>
+
+              {/* Treatment Plan */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Treatment Plan
+                  </label>
+                </div>
+                <textarea
+                  value={formData.plan}
+                  onChange={(e) => setFormData(prev => ({ ...prev, plan: e.target.value }))}
+                  rows={4}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Treatment plan and recommendations..."
+                />
+              </div>
+
+              {/* ICD Codes */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    ICD Codes
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  value={formData.icdCodes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, icdCodes: e.target.value }))}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors"
+                  placeholder="ICD-10 codes (comma separated)..."
+                />
+              </div>
+
+              {/* Medications */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Medications
+                  </label>
+                </div>
+                <textarea
+                  value={formData.medications}
+                  onChange={(e) => setFormData(prev => ({ ...prev, medications: e.target.value }))}
+                  rows={3}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Prescribed medications with dosage and frequency..."
+                />
+              </div>
+
+              {/* Content */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Additional Notes
+                  </label>
+                </div>
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
                   rows={4}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                  placeholder="Additional clinical notes and observations"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors resize-none"
+                  placeholder="Additional clinical notes and observations..."
+                  required
                 />
               </div>
 
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Tags (comma-separated)
-                </label>
-                {!conversationMode && <VoiceInputButton fieldName="tags" label="Tags" />}
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    Tags
+                  </label>
+                </div>
                 <input
                   type="text"
                   value={formData.tags}
                   onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 mt-2"
-                  placeholder="routine, follow-up, urgent"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors"
+                  placeholder="Tags (comma separated)..."
                 />
               </div>
 
-              {/* Voice Recognition Status */}
-              {!browserSupportsSpeechRecognition && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                  <div className="flex items-center space-x-2">
-                    <Volume2 className="w-5 h-5 text-yellow-600" />
-                    <div>
-                      <h4 className="font-medium text-yellow-800 dark:text-yellow-400">
-                        Voice Input Not Available
-                      </h4>
-                      <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                        Your browser doesn't support speech recognition. Please use Chrome, Edge, or Safari for voice input functionality.
-                      </p>
-                    </div>
-                  </div>
+              {/* Follow-up */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="followUpRequired"
+                    checked={formData.followUpRequired}
+                    onChange={(e) => setFormData(prev => ({ ...prev, followUpRequired: e.target.checked }))}
+                    className="w-4 h-4 text-rak-magenta-600 bg-gray-100 border-gray-300 rounded focus:ring-rak-magenta-500 focus:ring-2"
+                  />
+                  <label htmlFor="followUpRequired" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Follow-up Required
+                  </label>
                 </div>
-              )}
 
-              {/* Current transcript display for regular voice input */}
-              {isRecording && transcript && !conversationMode && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <div className="flex items-start space-x-2">
-                    <Mic className="w-5 h-5 text-blue-600 mt-0.5" />
-                    <div className="flex-1">
-                      <h4 className="font-medium text-blue-800 dark:text-blue-400 mb-2">
-                        Voice Input Active - {recordingField}
-                      </h4>
-                      <p className="text-sm text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-800 p-2 rounded border">
-                        "{transcript}"
-                      </p>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        Continue speaking or click "Stop Recording" to finish
-                      </p>
-                    </div>
+                {formData.followUpRequired && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Follow-up Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.followUpDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, followUpDate: e.target.value }))}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-colors"
+                    />
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Form Actions */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <button
                   type="button"
-                  onClick={onClose}
-                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  onClick={onCancel}
+                  className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center space-x-2 bg-rak-magenta-600 hover:bg-rak-magenta-700 text-white px-6 py-2 rounded-lg transition-colors"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-rak-magenta-600 to-rak-magenta-700 hover:from-rak-magenta-700 hover:to-rak-magenta-800 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>{entry ? 'Update' : 'Save'} Entry</span>
+                  <Save className="w-5 h-5" />
+                  <span>{entry ? 'Update Entry' : 'Save Entry'}</span>
                 </button>
               </div>
             </form>
           </div>
 
           {/* AI Suggestions Panel */}
-          {showAISuggestions && (
-            <div className="w-96 bg-gray-50 dark:bg-gray-900 border-l border-gray-200 dark:border-gray-700 overflow-y-auto">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Brain className="w-5 h-5" />
-                    <h4 className="font-semibold">AI Clinical Assistant</h4>
-                  </div>
-                  <button
-                    onClick={() => setShowAISuggestions(false)}
-                    className="text-blue-100 hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+          <div className="w-96 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-l border-gray-200 dark:border-gray-700 overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center space-x-2 mb-6">
+                <div className="p-2 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">AI Clinical Assistant</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Smart suggestions & insights</p>
                 </div>
               </div>
 
-              <div className="p-4 space-y-6">
-                {/* Scribe Bot Status */}
-                {conversationMode && (
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Bot className="w-5 h-5 text-blue-600" />
-                      <h5 className="font-semibold text-blue-900 dark:text-blue-100">Scribe Bot Active</h5>
+              {/* ICD Code Suggestions */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Target className="w-4 h-4 text-blue-600" />
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">ICD Code Suggestions</h4>
+                </div>
+                <div className="space-y-2">
+                  {mockAISuggestions.icdCodes.map((suggestion, index) => {
+                    const suggestionId = `icd-${JSON.stringify(suggestion)}`;
+                    const isApplied = appliedSuggestions.has(suggestionId);
+                    
+                    return (
+                      <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900 dark:text-white">
+                              {suggestion.code}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              {suggestion.description}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2 ml-2">
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full">
+                              {suggestion.confidence}%
+                            </span>
+                            {isApplied ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <button
+                                onClick={() => applySuggestion('icd', suggestion)}
+                                className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded transition-colors"
+                              >
+                                Apply
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Medication Suggestions */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Pill className="w-4 h-4 text-green-600" />
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Medication Suggestions</h4>
+                </div>
+                <div className="space-y-2">
+                  {mockAISuggestions.medications.map((suggestion, index) => {
+                    const suggestionId = `medication-${JSON.stringify(suggestion)}`;
+                    const isApplied = appliedSuggestions.has(suggestionId);
+                    
+                    return (
+                      <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900 dark:text-white">
+                              {suggestion.name}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              {suggestion.dosage} - {suggestion.frequency}
+                            </div>
+                            <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                              For: {suggestion.indication}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2 ml-2">
+                            <span className="text-xs bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-2 py-1 rounded-full">
+                              {suggestion.confidence}%
+                            </span>
+                            {isApplied ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <button
+                                onClick={() => applySuggestion('medication', suggestion)}
+                                className="text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded transition-colors"
+                              >
+                                Apply
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Differential Diagnosis */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Lightbulb className="w-4 h-4 text-yellow-600" />
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Differential Diagnosis</h4>
+                </div>
+                <div className="space-y-2">
+                  {mockAISuggestions.differentialDx.map((suggestion, index) => {
+                    const suggestionId = `diagnosis-${JSON.stringify(suggestion)}`;
+                    const isApplied = appliedSuggestions.has(suggestionId);
+                    
+                    return (
+                      <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900 dark:text-white">
+                              {suggestion.diagnosis}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                              {suggestion.reasoning}
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2 ml-2">
+                            <span className="text-xs bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 px-2 py-1 rounded-full">
+                              {suggestion.probability}%
+                            </span>
+                            {isApplied ? (
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                            ) : (
+                              <button
+                                onClick={() => applySuggestion('diagnosis', suggestion)}
+                                className="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-2 py-1 rounded transition-colors"
+                              >
+                                Apply
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Clinical Guidelines */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <FileText className="w-4 h-4 text-purple-600" />
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Clinical Guidelines</h4>
+                </div>
+                <div className="space-y-2">
+                  {mockAISuggestions.clinicalGuidelines.map((guideline, index) => (
+                    <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                      <div className="font-medium text-sm text-gray-900 dark:text-white mb-1">
+                        {guideline.title}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                        {guideline.recommendation}
+                      </div>
+                      <div className="text-xs text-purple-600 dark:text-purple-400">
+                        Source: {guideline.source}
+                      </div>
                     </div>
-                    <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Recording conversation and preparing to auto-generate clinical documentation
-                    </p>
-                  </div>
-                )}
-
-                {/* Patient Insights */}
-                <div>
-                  <h5 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                    <TrendingUp className="w-4 h-4 mr-2 text-blue-600" />
-                    Patient Insights
-                  </h5>
-                  <div className="space-y-2">
-                    {MOCK_PATIENT_INSIGHTS.map((insight, index) => (
-                      <div
-                        key={index}
-                        className={`p-3 rounded-lg border text-sm ${
-                          insight.priority === 'critical' ? 'bg-red-50 border-red-200 text-red-800' :
-                          insight.priority === 'high' ? 'bg-orange-50 border-orange-200 text-orange-800' :
-                          'bg-blue-50 border-blue-200 text-blue-800'
-                        }`}
-                      >
-                        <div className="font-medium flex items-center">
-                          {insight.type === 'trend' && <TrendingUp className="w-3 h-3 mr-1" />}
-                          {insight.type === 'allergy' && <AlertTriangle className="w-3 h-3 mr-1" />}
-                          {insight.type === 'medication' && <Pill className="w-3 h-3 mr-1" />}
-                          {insight.type === 'followup' && <Clock className="w-3 h-3 mr-1" />}
-                          {insight.title}
-                        </div>
-                        <div className="text-xs mt-1 opacity-80">{insight.description}</div>
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
+              </div>
 
-                {/* ICD Code Suggestions */}
-                <div>
-                  <h5 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                    <FileText className="w-4 h-4 mr-2 text-green-600" />
-                    ICD Code Suggestions
-                  </h5>
-                  <div className="space-y-2">
-                    {MOCK_ICD_CODES.map((code, index) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-shadow cursor-pointer"
-                        onClick={() => applyIcdCode(code)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm text-gray-900 dark:text-white">
-                              {code.code}
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              {code.description}
-                            </div>
-                          </div>
-                          <div className="text-xs text-green-600 font-medium ml-2">
-                            {code.confidence}%
-                          </div>
-                        </div>
-                        {selectedIcdCodes.includes(code.code) && (
-                          <div className="mt-2 flex items-center text-xs text-green-600">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Applied
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+              {/* Patient Insights */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <TrendingUp className="w-4 h-4 text-teal-600" />
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Patient Insights</h4>
                 </div>
-
-                {/* Medication Suggestions */}
-                <div>
-                  <h5 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                    <Pill className="w-4 h-4 mr-2 text-purple-600" />
-                    Medication Suggestions
-                  </h5>
-                  <div className="space-y-2">
-                    {MOCK_MEDICATIONS.map((med, index) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-shadow cursor-pointer"
-                        onClick={() => applyMedication(med)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm text-gray-900 dark:text-white">
-                              {med.name}
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              {med.dosage} {med.frequency}
-                            </div>
-                            <div className="text-xs text-blue-600 mt-1">
-                              For: {med.indication}
-                            </div>
+                <div className="space-y-2">
+                  {mockAISuggestions.patientInsights.map((insight, index) => (
+                    <div key={index} className={`rounded-lg p-3 border ${
+                      insight.priority === 'high' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+                      insight.priority === 'medium' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800' :
+                      'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                    }`}>
+                      <div className="flex items-start space-x-2">
+                        {insight.type === 'trend' ? <TrendingUp className="w-4 h-4 text-teal-600 mt-0.5" /> : 
+                         <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5" />}
+                        <div className="flex-1">
+                          <div className="font-medium text-sm text-gray-900 dark:text-white">
+                            {insight.title}
                           </div>
-                          <div className="text-xs text-green-600 font-medium ml-2">
-                            {med.confidence}%
-                          </div>
-                        </div>
-                        {selectedMedications.find(m => m.name === med.name) && (
-                          <div className="mt-2 flex items-center text-xs text-green-600">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Applied
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Differential Diagnosis */}
-                <div>
-                  <h5 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                    <Lightbulb className="w-4 h-4 mr-2 text-yellow-600" />
-                    Differential Diagnosis
-                  </h5>
-                  <div className="space-y-2">
-                    {MOCK_DIFFERENTIAL_DIAGNOSES.map((diagnosis, index) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-shadow cursor-pointer"
-                        onClick={() => applyDifferentialDiagnosis(diagnosis)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm text-gray-900 dark:text-white">
-                              {diagnosis.diagnosis}
-                            </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                              {diagnosis.reasoning}
-                            </div>
-                          </div>
-                          <div className="text-xs text-blue-600 font-medium ml-2">
-                            {diagnosis.probability}%
+                          <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                            {insight.description}
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
+              </div>
 
-                {/* Drug Interactions */}
-                {MOCK_DRUG_INTERACTIONS.length > 0 && (
-                  <div>
-                    <h5 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                      <AlertTriangle className="w-4 h-4 mr-2 text-red-600" />
-                      Drug Interaction Alerts
-                    </h5>
-                    <div className="space-y-2">
-                      {MOCK_DRUG_INTERACTIONS.map((interaction, index) => (
-                        <div
-                          key={index}
-                          className={`p-3 rounded-lg border text-sm ${
-                            interaction.severity === 'High' ? 'bg-red-50 border-red-200 text-red-800' :
-                            'bg-yellow-50 border-yellow-200 text-yellow-800'
-                          }`}
-                        >
-                          <div className="font-medium">
-                            {interaction.drug1} + {interaction.drug2}
+              {/* Drug Interactions */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <Shield className="w-4 h-4 text-red-600" />
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Drug Interactions</h4>
+                </div>
+                <div className="space-y-2">
+                  {mockAISuggestions.drugInteractions.map((interaction, index) => (
+                    <div key={index} className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3 border border-red-200 dark:border-red-800">
+                      <div className="flex items-start space-x-2">
+                        <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm text-red-800 dark:text-red-400">
+                            {interaction.drugs.join(' + ')}
                           </div>
-                          <div className="text-xs mt-1 opacity-80">
+                          <div className="text-xs text-red-600 dark:text-red-400 mt-1">
                             {interaction.description}
                           </div>
-                          <div className="text-xs mt-1 font-medium">
-                            Severity: {interaction.severity}
+                          <div className="text-xs bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-300 px-2 py-1 rounded mt-2 inline-block">
+                            {interaction.severity} severity
                           </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              </div>
 
-                {/* Clinical Guidelines */}
-                <div>
-                  <h5 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                    <Shield className="w-4 h-4 mr-2 text-teal-600" />
-                    Clinical Guidelines
-                  </h5>
-                  <div className="space-y-2">
-                    {MOCK_CLINICAL_GUIDELINES.map((guideline, index) => (
-                      <div
-                        key={index}
-                        className="p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
-                      >
-                        <div className="font-medium text-sm text-gray-900 dark:text-white">
-                          {guideline.title}
-                        </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                          {guideline.recommendation}
-                        </div>
-                        <div className="text-xs text-teal-600 mt-1 font-medium">
-                          Source: {guideline.source}
+              {/* Allergy Alerts */}
+              <div className="mb-6">
+                <div className="flex items-center space-x-2 mb-3">
+                  <AlertTriangle className="w-4 h-4 text-orange-600" />
+                  <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Allergy Alerts</h4>
+                </div>
+                <div className="space-y-2">
+                  {mockAISuggestions.allergyAlerts.map((alert, index) => (
+                    <div key={index} className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 border border-orange-200 dark:border-orange-800">
+                      <div className="flex items-start space-x-2">
+                        <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="font-medium text-sm text-orange-800 dark:text-orange-400">
+                            {alert.medication}
+                          </div>
+                          <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">
+                            {alert.reaction}
+                          </div>
+                          <div className="text-xs bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-300 px-2 py-1 rounded mt-2 inline-block">
+                            {alert.severity} allergy
+                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
