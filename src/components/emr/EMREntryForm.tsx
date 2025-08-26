@@ -262,8 +262,9 @@ Doctor: We need to monitor it. I'm going to prescribe Lisinopril 10mg once daily
               </p>
             </div>
             <button
+             type="button"
               onClick={onCancel}
-              className="p-2 hover:bg-rak-magenta-800 rounded-lg transition-colors"
+             className="p-2 hover:bg-rak-magenta-800 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-white"
             >
               <X className="w-6 h-6" />
             </button>
