@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X } from 'lucide-react';
+import { Save, X, Mic, MicOff, Volume2, Pause, Play } from 'lucide-react';
 import { useEMRStore } from '../../stores/emrStore';
 import { useAuthStore } from '../../stores/authStore';
 import { Patient, EMREntry, ROLE_PERMISSIONS } from '../../types/emr';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+
+// Import regenerator-runtime for async/await support
+import 'regenerator-runtime/runtime';
 
 interface EMREntryFormProps {
   patient: Patient;
@@ -14,6 +18,19 @@ interface EMREntryFormProps {
 export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormProps) {
   const user = useAuthStore(state => state.user);
   const { addEMREntry, updateEMREntry } = useEMRStore();
+  
+  // Speech recognition setup
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+    isMicrophoneAvailable
+  } = useSpeechRecognition();
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [activeField, setActiveField] = useState<string>('');
+  const [recordingField, setRecordingField] = useState<string>('');
   
   const [formData, setFormData] = useState({
     entryType: 'consultation' as EMREntry['entryType'],
@@ -57,6 +74,54 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
       });
     }
   }, [entry]);
+
+  // Handle speech recognition transcript
+  useEffect(() => {
+    if (transcript && activeField && isRecording) {
+      setFormData(prev => ({
+        ...prev,
+        [activeField]: prev[activeField as keyof typeof prev] + ' ' + transcript
+      }));
+    }
+  }, [transcript, activeField, isRecording]);
+
+  // Voice input handlers
+  const startListening = (fieldName: string) => {
+    if (!browserSupportsSpeechRecognition) {
+      alert('Your browser does not support speech recognition. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (!isMicrophoneAvailable) {
+      alert('Microphone access is required for voice input. Please allow microphone permissions.');
+      return;
+    }
+
+    setActiveField(fieldName);
+    setRecordingField(fieldName);
+    setIsRecording(true);
+    resetTranscript();
+    
+    SpeechRecognition.startListening({ 
+      continuous: true,
+      language: 'en-US' // You can make this configurable based on user preference
+    });
+  };
+
+  const stopListening = () => {
+    setIsRecording(false);
+    setActiveField('');
+    setRecordingField('');
+    SpeechRecognition.stopListening();
+  };
+
+  const clearTranscript = (fieldName: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldName]: ''
+    }));
+    resetTranscript();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -234,6 +299,51 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
     );
   };
 
+  // Voice input button component
+  const VoiceInputButton = ({ fieldName, label }: { fieldName: string; label: string }) => (
+    <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
+        {isRecording && recordingField === fieldName ? (
+          <button
+            type="button"
+            onClick={stopListening}
+            className="flex items-center space-x-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm transition-colors animate-pulse"
+          >
+            <MicOff className="w-4 h-4" />
+            <span>Stop Recording</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => startListening(fieldName)}
+            className="flex items-center space-x-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm transition-colors"
+            disabled={isRecording}
+          >
+            <Mic className="w-4 h-4" />
+            <span>Voice Input</span>
+          </button>
+        )}
+        
+        {formData[fieldName as keyof typeof formData] && (
+          <button
+            type="button"
+            onClick={() => clearTranscript(fieldName)}
+            className="flex items-center space-x-1 bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded-md text-sm transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+      
+      {isRecording && recordingField === fieldName && (
+        <div className="flex items-center space-x-2 text-sm text-blue-600">
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+          <span>Listening... Speak clearly</span>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -291,6 +401,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Title *
             </label>
+            <VoiceInputButton fieldName="title" label="Title" />
             <input
               type="text"
               value={formData.title}
@@ -305,6 +416,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Content *
             </label>
+            <VoiceInputButton fieldName="content" label="Content" />
             <textarea
               value={formData.content}
               onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
@@ -321,6 +433,7 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Tags (comma-separated)
             </label>
+            <VoiceInputButton fieldName="tags" label="Tags" />
             <input
               type="text"
               value={formData.tags}
@@ -329,6 +442,43 @@ export function EMREntryForm({ patient, entry, onClose, onSave }: EMREntryFormPr
               placeholder="routine, follow-up, urgent"
             />
           </div>
+
+          {/* Voice Recognition Status */}
+          {!browserSupportsSpeechRecognition && (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <Volume2 className="w-5 h-5 text-yellow-600" />
+                <div>
+                  <h4 className="font-medium text-yellow-800 dark:text-yellow-400">
+                    Voice Input Not Available
+                  </h4>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Your browser doesn't support speech recognition. Please use Chrome, Edge, or Safari for voice input functionality.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Current transcript display */}
+          {isRecording && transcript && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="flex items-start space-x-2">
+                <Mic className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-blue-800 dark:text-blue-400 mb-2">
+                    Voice Input Active - {recordingField}
+                  </h4>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 bg-white dark:bg-gray-800 p-2 rounded border">
+                    "{transcript}"
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    Continue speaking or click "Stop Recording" to finish
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
