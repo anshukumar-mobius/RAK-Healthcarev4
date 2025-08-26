@@ -29,7 +29,20 @@ import {
   TrendingUp,
   Heart,
   Thermometer,
-  Activity as PulseIcon
+  Activity as PulseIcon,
+  List,
+  Timeline,
+  BarChart3,
+  MapPin,
+  ArrowRight,
+  Layers,
+  Grid,
+  Calendar as CalendarIcon,
+  Target,
+  Bookmark,
+  Tag,
+  Users,
+  Clipboard
 } from 'lucide-react';
 import { useEMRStore } from '../../stores/emrStore';
 import { useAuthStore } from '../../stores/authStore';
@@ -119,7 +132,14 @@ export function EMRViewer({ patient }: EMRViewerProps) {
     consultations: emrEntries.filter(e => e.entryType === 'consultation').length,
     vitals: emrEntries.filter(e => e.entryType === 'vital_signs').length,
     medications: emrEntries.filter(e => e.entryType === 'medication').length,
-    pending: emrEntries.filter(e => e.followUpRequired).length
+    pending: emrEntries.filter(e => e.followUpRequired).length,
+    thisWeek: emrEntries.filter(e => {
+      const entryDate = new Date(e.createdAt);
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return entryDate >= weekAgo;
+    }).length,
+    critical: emrEntries.filter(e => e.priority === 'emergent').length
   };
 
   const toggleEntryExpansion = (entryId: string) => {
@@ -285,160 +305,635 @@ export function EMRViewer({ patient }: EMRViewerProps) {
     );
   };
 
-  const renderEntryCard = (entry: EMREntry) => {
-    const Icon = entryTypeIcons[entry.entryType];
-    const isExpanded = expandedEntries.has(entry.id);
-    const priority = entry.priority as keyof typeof priorityConfig;
-    
-    return (
-      <div
-        key={entry.id}
-        className={`group relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${entryTypeColors[entry.entryType]}`}
-      >
-        {/* Priority indicator */}
-        {priority && (
-          <div className={`absolute top-0 left-0 w-1 h-full ${priorityConfig[priority].color}`} />
-        )}
-        
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-start space-x-4 rtl:space-x-reverse flex-1">
-              <div className="p-3 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700">
-                <Icon className="w-6 h-6" />
-              </div>
-              
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
-                  <h4 className="font-bold text-lg truncate">{entry.title}</h4>
-                  {entry.followUpRequired && (
-                    <div className="flex items-center space-x-1 bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full text-xs">
-                      <Clock className="w-3 h-3" />
-                      <span>Follow-up</span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex items-center space-x-4 rtl:space-x-reverse text-sm opacity-75 mb-2">
-                  <span className="flex items-center space-x-1">
-                    <Calendar className="w-3 h-3" />
-                    <span>{formatRelativeTime(entry.createdAt)}</span>
-                  </span>
-                  <span className="capitalize">{entry.entryType.replace('_', ' ')}</span>
-                  {priority && (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium bg-white dark:bg-gray-800 ${priorityConfig[priority].textColor}`}>
-                      {priorityConfig[priority].label}
-                    </span>
-                  )}
-                </div>
-                
-                <p className={`text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
-                  {entry.content}
-                </p>
-              </div>
-            </div>
-            
-            {/* Status badge */}
-            <div className="flex items-center space-x-2 rtl:space-x-reverse ml-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                entry.status === 'final' ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700' :
-                entry.status === 'draft' ? 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-300 dark:border-yellow-700' :
-                'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700'
-              }`}>
-                {entry.status === 'final' && <CheckCircle className="w-3 h-3 inline mr-1" />}
-                {entry.status}
-              </span>
-            </div>
-          </div>
-          
-          {/* Expanded content */}
-          {isExpanded && (
-            <div className="mt-4 space-y-4">
-              {entry.entryType === 'vital_signs' && renderVitalSigns(entry.data)}
-              {entry.entryType === 'consultation' && renderClinicalNotes(entry)}
-              
-              {entry.followUpRequired && entry.followUpDate && (
-                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
-                  <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-300 mb-2">
-                    <Clock className="w-4 h-4" />
-                    <span className="font-semibold">Follow-up Required</span>
-                  </div>
-                  <p className="text-orange-700 dark:text-orange-300 text-sm">
-                    Scheduled for: {formatDate(entry.followUpDate)}
-                  </p>
-                </div>
-              )}
-              
-              {entry.tags && entry.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {entry.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-white dark:bg-gray-800 rounded-full text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+  // LIST VIEW COMPONENT
+  const renderListView = () => {
+    const renderEntryCard = (entry: EMREntry) => {
+      const Icon = entryTypeIcons[entry.entryType];
+      const isExpanded = expandedEntries.has(entry.id);
+      const priority = entry.priority as keyof typeof priorityConfig;
+      
+      return (
+        <div
+          key={entry.id}
+          className={`group relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${entryTypeColors[entry.entryType]}`}
+        >
+          {/* Priority indicator */}
+          {priority && (
+            <div className={`absolute top-0 left-0 w-1 h-full ${priorityConfig[priority].color}`} />
           )}
           
-          {/* Action buttons */}
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <button
-                onClick={() => toggleEntryExpansion(entry.id)}
-                className="flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                <span>{isExpanded ? 'Less' : 'More'}</span>
-              </button>
+          <div className="p-6">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start space-x-4 rtl:space-x-reverse flex-1">
+                <div className="p-3 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700">
+                  <Icon className="w-6 h-6" />
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
+                    <h4 className="font-bold text-lg truncate">{entry.title}</h4>
+                    {entry.followUpRequired && (
+                      <div className="flex items-center space-x-1 bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full text-xs">
+                        <Clock className="w-3 h-3" />
+                        <span>Follow-up</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-4 rtl:space-x-reverse text-sm opacity-75 mb-2">
+                    <span className="flex items-center space-x-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>{formatRelativeTime(entry.createdAt)}</span>
+                    </span>
+                    <span className="capitalize">{entry.entryType.replace('_', ' ')}</span>
+                    {priority && (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium bg-white dark:bg-gray-800 ${priorityConfig[priority].textColor}`}>
+                        {priorityConfig[priority].label}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className={`text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                    {entry.content}
+                  </p>
+                </div>
+              </div>
               
-              <button
-                onClick={() => setSelectedEntry(entry)}
-                className="flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <Eye className="w-4 h-4" />
-                <span>View</span>
-              </button>
+              {/* Status badge */}
+              <div className="flex items-center space-x-2 rtl:space-x-reverse ml-4">
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                  entry.status === 'final' ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700' :
+                  entry.status === 'draft' ? 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-300 dark:border-yellow-700' :
+                  'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700'
+                }`}>
+                  {entry.status === 'final' && <CheckCircle className="w-3 h-3 inline mr-1" />}
+                  {entry.status}
+                </span>
+              </div>
             </div>
             
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              {user?.role === 'doctor' && (
+            {/* Expanded content */}
+            {isExpanded && (
+              <div className="mt-4 space-y-4">
+                {entry.entryType === 'vital_signs' && renderVitalSigns(entry.data)}
+                {entry.entryType === 'consultation' && renderClinicalNotes(entry)}
+                
+                {entry.followUpRequired && entry.followUpDate && (
+                  <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
+                    <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-300 mb-2">
+                      <Clock className="w-4 h-4" />
+                      <span className="font-semibold">Follow-up Required</span>
+                    </div>
+                    <p className="text-orange-700 dark:text-orange-300 text-sm">
+                      Scheduled for: {formatDate(entry.followUpDate)}
+                    </p>
+                  </div>
+                )}
+                
+                {entry.tags && entry.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {entry.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-white dark:bg-gray-800 rounded-full text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Action buttons */}
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
                 <button
-                  onClick={() => handleAIAnalysis(entry)}
-                  className="p-2 rounded-lg bg-gradient-to-r from-rak-magenta-500 to-rak-magenta-600 text-white hover:from-rak-magenta-600 hover:to-rak-magenta-700 transition-all duration-200 shadow-md hover:shadow-lg"
-                  title="AI Analysis"
+                  onClick={() => toggleEntryExpansion(entry.id)}
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <Bot className="w-4 h-4" />
+                  {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  <span>{isExpanded ? 'Less' : 'More'}</span>
                 </button>
-              )}
-              
-              {canAmend && entry.createdBy === user?.id && (
+                
                 <button
-                  onClick={() => setEditingEntry(entry)}
-                  className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors"
+                  onClick={() => setSelectedEntry(entry)}
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Eye className="w-4 h-4" />
+                  <span>View</span>
                 </button>
-              )}
+              </div>
               
-              {canDelete && entry.createdBy === user?.id && (
-                <button
-                  onClick={() => handleDeleteEntry(entry.id)}
-                  className="p-2 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                {user?.role === 'doctor' && (
+                  <button
+                    onClick={() => handleAIAnalysis(entry)}
+                    className="p-2 rounded-lg bg-gradient-to-r from-rak-magenta-500 to-rak-magenta-600 text-white hover:from-rak-magenta-600 hover:to-rak-magenta-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                    title="AI Analysis"
+                  >
+                    <Bot className="w-4 h-4" />
+                  </button>
+                )}
+                
+                {canAmend && entry.createdBy === user?.id && (
+                  <button
+                    onClick={() => setEditingEntry(entry)}
+                    className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                )}
+                
+                {canDelete && entry.createdBy === user?.id && (
+                  <button
+                    onClick={() => handleDeleteEntry(entry.id)}
+                    className="p-2 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                
+                <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  <MoreHorizontal className="w-4 h-4" />
                 </button>
-              )}
-              
-              <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
+              </div>
             </div>
           </div>
         </div>
+      );
+    };
+
+    return (
+      <div className="space-y-6">
+        {filteredEntries.map(renderEntryCard)}
+      </div>
+    );
+  };
+
+  // TIMELINE VIEW COMPONENT
+  const renderTimelineView = () => {
+    const groupedEntries = filteredEntries.reduce((groups, entry) => {
+      const date = new Date(entry.createdAt).toDateString();
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(entry);
+      return groups;
+    }, {} as Record<string, EMREntry[]>);
+
+    return (
+      <div className="relative">
+        {/* Timeline line */}
+        <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-rak-magenta-400 to-rak-magenta-600"></div>
+        
+        <div className="space-y-8">
+          {Object.entries(groupedEntries).map(([date, entries]) => (
+            <div key={date} className="relative">
+              {/* Date marker */}
+              <div className="flex items-center mb-6">
+                <div className="relative z-10 bg-rak-magenta-600 text-white px-4 py-2 rounded-full shadow-lg">
+                  <div className="flex items-center space-x-2">
+                    <CalendarIcon className="w-4 h-4" />
+                    <span className="font-semibold text-sm">
+                      {new Date(date).toLocaleDateString(language === 'ar' ? 'ar-AE' : 'en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex-1 h-px bg-gradient-to-r from-rak-magenta-300 to-transparent ml-4"></div>
+              </div>
+              
+              {/* Entries for this date */}
+              <div className="ml-16 space-y-4">
+                {entries.map((entry) => {
+                  const Icon = entryTypeIcons[entry.entryType];
+                  const priority = entry.priority as keyof typeof priorityConfig;
+                  
+                  return (
+                    <div
+                      key={entry.id}
+                      className="relative bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-xl transition-all duration-300"
+                    >
+                      {/* Timeline connector */}
+                      <div className="absolute -left-16 top-6 w-8 h-0.5 bg-rak-magenta-400"></div>
+                      <div className="absolute -left-20 top-4 w-4 h-4 bg-rak-magenta-600 rounded-full border-4 border-white dark:border-gray-800 shadow-md"></div>
+                      
+                      {/* Priority indicator */}
+                      {priority && (
+                        <div className={`absolute top-0 right-0 w-3 h-3 ${priorityConfig[priority].color} rounded-bl-lg`}></div>
+                      )}
+                      
+                      <div className="flex items-start space-x-4">
+                        <div className={`p-3 rounded-xl ${entryTypeColors[entry.entryType]} shadow-sm`}>
+                          <Icon className="w-5 h-5" />
+                        </div>
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-bold text-lg text-gray-900 dark:text-white">
+                              {entry.title}
+                            </h4>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {new Date(entry.createdAt).toLocaleTimeString([], { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit' 
+                                })}
+                              </span>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                entry.status === 'final' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
+                                entry.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300' :
+                                'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+                              }`}>
+                                {entry.status}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-4 mb-3 text-sm text-gray-600 dark:text-gray-400">
+                            <span className="capitalize">{entry.entryType.replace('_', ' ')}</span>
+                            {priority && (
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityConfig[priority].textColor} bg-white dark:bg-gray-700`}>
+                                {priorityConfig[priority].label}
+                              </span>
+                            )}
+                            {entry.followUpRequired && (
+                              <span className="flex items-center space-x-1 text-orange-600 dark:text-orange-400">
+                                <Clock className="w-3 h-3" />
+                                <span>Follow-up</span>
+                              </span>
+                            )}
+                          </div>
+                          
+                          <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed mb-4">
+                            {entry.content}
+                          </p>
+                          
+                          {entry.tags && entry.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {entry.tags.map((tag, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs text-gray-600 dark:text-gray-400"
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => setSelectedEntry(entry)}
+                                className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-rak-magenta-100 dark:bg-rak-magenta-900/40 text-rak-magenta-700 dark:text-rak-magenta-300 rounded-lg hover:bg-rak-magenta-200 dark:hover:bg-rak-magenta-900/60 transition-colors"
+                              >
+                                <Eye className="w-3 h-3" />
+                                <span>View Details</span>
+                              </button>
+                              
+                              {user?.role === 'doctor' && (
+                                <button
+                                  onClick={() => handleAIAnalysis(entry)}
+                                  className="p-1.5 bg-gradient-to-r from-rak-magenta-500 to-rak-magenta-600 text-white rounded-lg hover:from-rak-magenta-600 hover:to-rak-magenta-700 transition-all"
+                                  title="AI Analysis"
+                                >
+                                  <Bot className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              {canAmend && entry.createdBy === user?.id && (
+                                <button
+                                  onClick={() => setEditingEntry(entry)}
+                                  className="p-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg transition-colors"
+                                >
+                                  <Edit className="w-3 h-3" />
+                                </button>
+                              )}
+                              
+                              {canDelete && entry.createdBy === user?.id && (
+                                <button
+                                  onClick={() => handleDeleteEntry(entry.id)}
+                                  className="p-1.5 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg transition-colors"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // SUMMARY VIEW COMPONENT
+  const renderSummaryView = () => {
+    const summaryData = {
+      overview: {
+        totalEntries: stats.total,
+        recentEntries: stats.thisWeek,
+        criticalEntries: stats.critical,
+        pendingFollowUps: stats.pending
+      },
+      byType: Object.entries(
+        filteredEntries.reduce((acc, entry) => {
+          acc[entry.entryType] = (acc[entry.entryType] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      ).sort(([,a], [,b]) => b - a),
+      recentActivity: filteredEntries.slice(0, 5),
+      criticalItems: filteredEntries.filter(e => e.priority === 'emergent' || e.followUpRequired),
+      vitalTrends: filteredEntries
+        .filter(e => e.entryType === 'vital_signs' && e.data)
+        .slice(0, 10)
+        .reverse(),
+      medications: filteredEntries.filter(e => e.entryType === 'medication'),
+      diagnoses: filteredEntries
+        .filter(e => e.entryType === 'consultation' && e.clinicalNotes?.icdCodes)
+        .flatMap(e => e.clinicalNotes?.icdCodes || [])
+        .reduce((acc, code) => {
+          acc[code] = (acc[code] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+    };
+
+    return (
+      <div className="space-y-8">
+        {/* Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-2xl p-6 border border-blue-200 dark:border-blue-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-blue-600 rounded-xl shadow-lg">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                {summaryData.overview.totalEntries}
+              </span>
+            </div>
+            <h3 className="font-semibold text-blue-800 dark:text-blue-300">Total Records</h3>
+            <p className="text-sm text-blue-600 dark:text-blue-400">All medical entries</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl p-6 border border-green-200 dark:border-green-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-green-600 rounded-xl shadow-lg">
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl font-bold text-green-600 dark:text-green-400">
+                {summaryData.overview.recentEntries}
+              </span>
+            </div>
+            <h3 className="font-semibold text-green-800 dark:text-green-300">This Week</h3>
+            <p className="text-sm text-green-600 dark:text-green-400">Recent activity</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 rounded-2xl p-6 border border-red-200 dark:border-red-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-red-600 rounded-xl shadow-lg">
+                <AlertTriangle className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl font-bold text-red-600 dark:text-red-400">
+                {summaryData.overview.criticalEntries}
+              </span>
+            </div>
+            <h3 className="font-semibold text-red-800 dark:text-red-300">Critical Items</h3>
+            <p className="text-sm text-red-600 dark:text-red-400">Require attention</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl p-6 border border-orange-200 dark:border-orange-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-3 bg-orange-600 rounded-xl shadow-lg">
+                <Clock className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+                {summaryData.overview.pendingFollowUps}
+              </span>
+            </div>
+            <h3 className="font-semibold text-orange-800 dark:text-orange-300">Follow-ups</h3>
+            <p className="text-sm text-orange-600 dark:text-orange-400">Pending actions</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Entry Types Distribution */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                <BarChart3 className="w-5 h-5 mr-2 text-rak-magenta-600" />
+                Record Types
+              </h3>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Distribution</span>
+            </div>
+            
+            <div className="space-y-4">
+              {summaryData.byType.map(([type, count]) => {
+                const Icon = entryTypeIcons[type as keyof typeof entryTypeIcons];
+                const percentage = Math.round((count / stats.total) * 100);
+                
+                return (
+                  <div key={type} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-lg ${entryTypeColors[type as keyof typeof entryTypeColors]}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white capitalize">
+                          {type.replace('_', ' ')}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {count} entries
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-rak-magenta-600 dark:text-rak-magenta-400">
+                        {percentage}%
+                      </p>
+                      <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1">
+                        <div 
+                          className="h-2 bg-rak-magenta-600 rounded-full transition-all duration-500"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                <Activity className="w-5 h-5 mr-2 text-rak-magenta-600" />
+                Recent Activity
+              </h3>
+              <button
+                onClick={() => setViewMode('timeline')}
+                className="text-sm text-rak-magenta-600 dark:text-rak-magenta-400 hover:underline"
+              >
+                View All
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {summaryData.recentActivity.map((entry) => {
+                const Icon = entryTypeIcons[entry.entryType];
+                
+                return (
+                  <div key={entry.id} className="flex items-start space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-900 rounded-xl transition-colors cursor-pointer"
+                       onClick={() => setSelectedEntry(entry)}>
+                    <div className={`p-2 rounded-lg ${entryTypeColors[entry.entryType]} flex-shrink-0`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 dark:text-white truncate">
+                        {entry.title}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {formatRelativeTime(entry.createdAt)}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {entry.priority === 'emergent' && (
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      )}
+                      {entry.followUpRequired && (
+                        <Clock className="w-3 h-3 text-orange-500" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Vital Signs Trends */}
+        {summaryData.vitalTrends.length > 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center">
+                <Heart className="w-5 h-5 mr-2 text-rak-magenta-600" />
+                Vital Signs Trends
+              </h3>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Last 10 readings</span>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {['temperature', 'heartRate', 'bloodPressure', 'oxygenSaturation'].map((vital) => {
+                const readings = summaryData.vitalTrends
+                  .map(entry => entry.data?.[vital])
+                  .filter(Boolean)
+                  .slice(-5);
+                
+                if (readings.length === 0) return null;
+                
+                const latest = readings[readings.length - 1];
+                const previous = readings[readings.length - 2];
+                const trend = previous ? (latest > previous ? 'up' : latest < previous ? 'down' : 'stable') : 'stable';
+                
+                return (
+                  <div key={vital} className="bg-gradient-to-br from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 rounded-xl p-4 border border-teal-200 dark:border-teal-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-teal-700 dark:text-teal-300 capitalize">
+                        {vital.replace(/([A-Z])/g, ' $1').trim()}
+                      </span>
+                      <div className={`p-1 rounded-full ${
+                        trend === 'up' ? 'bg-green-100 text-green-600' :
+                        trend === 'down' ? 'bg-red-100 text-red-600' :
+                        'bg-gray-100 text-gray-600'
+                      }`}>
+                        <TrendingUp className={`w-3 h-3 ${trend === 'down' ? 'rotate-180' : ''}`} />
+                      </div>
+                    </div>
+                    <p className="text-lg font-bold text-teal-800 dark:text-teal-300">
+                      {typeof latest === 'object' ? `${latest.systolic}/${latest.diastolic}` : latest}
+                      <span className="text-xs font-normal ml-1">
+                        {vital === 'temperature' ? '°C' :
+                         vital === 'heartRate' ? 'bpm' :
+                         vital === 'bloodPressure' ? 'mmHg' :
+                         vital === 'oxygenSaturation' ? '%' : ''}
+                      </span>
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Critical Items & Follow-ups */}
+        {summaryData.criticalItems.length > 0 && (
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-2xl p-6 border border-red-200 dark:border-red-700 shadow-lg">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-red-800 dark:text-red-300 flex items-center">
+                <Target className="w-5 h-5 mr-2" />
+                Items Requiring Attention
+              </h3>
+              <span className="text-sm text-red-600 dark:text-red-400">
+                {summaryData.criticalItems.length} items
+              </span>
+            </div>
+            
+            <div className="space-y-3">
+              {summaryData.criticalItems.slice(0, 5).map((entry) => {
+                const Icon = entryTypeIcons[entry.entryType];
+                
+                return (
+                  <div key={entry.id} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-red-200 dark:border-red-700">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-2 rounded-lg ${entryTypeColors[entry.entryType]}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {entry.title}
+                        </p>
+                        <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                          <span>{formatRelativeTime(entry.createdAt)}</span>
+                          {entry.priority === 'emergent' && (
+                            <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                              Emergency
+                            </span>
+                          )}
+                          {entry.followUpRequired && (
+                            <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                              Follow-up Due
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setSelectedEntry(entry)}
+                      className="px-3 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors text-sm font-medium"
+                    >
+                      Review
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -472,26 +967,34 @@ export function EMRViewer({ patient }: EMRViewerProps) {
         </div>
 
         {/* Stats Dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
             <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-sm text-rak-magenta-100">Total Entries</div>
+            <div className="text-sm text-rak-magenta-100">Total</div>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
             <div className="text-2xl font-bold">{stats.consultations}</div>
-            <div className="text-sm text-rak-magenta-100">Consultations</div>
+            <div className="text-sm text-rak-magenta-100">Consults</div>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
             <div className="text-2xl font-bold">{stats.vitals}</div>
-            <div className="text-sm text-rak-magenta-100">Vital Signs</div>
+            <div className="text-sm text-rak-magenta-100">Vitals</div>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
             <div className="text-2xl font-bold">{stats.medications}</div>
-            <div className="text-sm text-rak-magenta-100">Medications</div>
+            <div className="text-sm text-rak-magenta-100">Meds</div>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
             <div className="text-2xl font-bold text-orange-300">{stats.pending}</div>
             <div className="text-sm text-rak-magenta-100">Follow-ups</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-green-300">{stats.thisWeek}</div>
+            <div className="text-sm text-rak-magenta-100">This Week</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-red-300">{stats.critical}</div>
+            <div className="text-sm text-rak-magenta-100">Critical</div>
           </div>
         </div>
       </div>
@@ -530,18 +1033,23 @@ export function EMRViewer({ patient }: EMRViewerProps) {
           
           {/* View Controls */}
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
-            <div className="flex items-center space-x-1 bg-white dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
-              {['list', 'timeline', 'summary'].map((mode) => (
+            <div className="flex items-center space-x-1 bg-white dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700 shadow-sm">
+              {[
+                { mode: 'list', icon: List, label: 'List' },
+                { mode: 'timeline', icon: Timeline, label: 'Timeline' },
+                { mode: 'summary', icon: BarChart3, label: 'Summary' }
+              ].map(({ mode, icon: Icon, label }) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode as any)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     viewMode === mode
                       ? 'bg-rak-magenta-600 text-white shadow-md'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  <Icon className="w-4 h-4" />
+                  <span>{label}</span>
                 </button>
               ))}
             </div>
@@ -583,9 +1091,11 @@ export function EMRViewer({ patient }: EMRViewerProps) {
             )}
           </div>
         ) : (
-          <div className="space-y-6">
-            {filteredEntries.map(renderEntryCard)}
-          </div>
+          <>
+            {viewMode === 'list' && renderListView()}
+            {viewMode === 'timeline' && renderTimelineView()}
+            {viewMode === 'summary' && renderSummaryView()}
+          </>
         )}
       </div>
 
