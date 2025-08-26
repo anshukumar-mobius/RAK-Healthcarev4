@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Plus, Edit, Trash2, Eye, Calendar, User, Activity, FlaskConical, Pill, Stethoscope, FileX, Clock, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Plus, Edit, Trash2, Eye, Calendar, User, Activity, FlaskConical, Pill, Stethoscope, FileX, Clock, AlertCircle, CheckCircle, Bot } from 'lucide-react';
 import { useEMRStore } from '../../stores/emrStore';
 import { useAuthStore } from '../../stores/authStore';
 import { Patient, EMREntry, ROLE_PERMISSIONS } from '../../types/emr';
