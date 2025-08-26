@@ -1,5 +1,36 @@
 import React, { useState } from 'react';
-import { FileText, Plus, Edit, Trash2, Eye, Calendar, User, Activity, FlaskConical, Pill, Stethoscope, FileX, Clock, AlertCircle, CheckCircle, Bot } from 'lucide-react';
+import { 
+  FileText, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye, 
+  Calendar, 
+  User, 
+  Activity, 
+  FlaskConical, 
+  Pill, 
+  Stethoscope, 
+  FileX, 
+  Clock, 
+  AlertTriangle, 
+  CheckCircle, 
+  Bot,
+  Search,
+  Filter,
+  ChevronDown,
+  ChevronRight,
+  Star,
+  Archive,
+  Download,
+  Share2,
+  MoreHorizontal,
+  Zap,
+  TrendingUp,
+  Heart,
+  Thermometer,
+  Activity as PulseIcon
+} from 'lucide-react';
 import { useEMRStore } from '../../stores/emrStore';
 import { useAuthStore } from '../../stores/authStore';
 import { Patient, EMREntry, ROLE_PERMISSIONS } from '../../types/emr';
@@ -17,19 +48,25 @@ const entryTypeIcons = {
   nursing_note: Activity,
   diagnostic_result: FlaskConical,
   medication: Pill,
-  vital_signs: Activity,
+  vital_signs: PulseIcon,
   procedure: FileText,
   discharge_summary: FileX
 };
 
 const entryTypeColors = {
-  consultation: 'bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200',
-  nursing_note: 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200',
-  diagnostic_result: 'bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 border-yellow-200',
-  medication: 'bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200',
-  vital_signs: 'bg-teal-100 dark:bg-teal-900/20 text-teal-600 dark:text-teal-400 border-teal-200',
-  procedure: 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-200',
-  discharge_summary: 'bg-gray-100 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 border-gray-200'
+  consultation: 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700',
+  nursing_note: 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 text-green-700 dark:text-green-300 border-green-200 dark:border-green-700',
+  diagnostic_result: 'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-700',
+  medication: 'bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700',
+  vital_signs: 'bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 text-teal-700 dark:text-teal-300 border-teal-200 dark:border-teal-700',
+  procedure: 'bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-700',
+  discharge_summary: 'bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+};
+
+const priorityConfig = {
+  emergent: { color: 'bg-red-500', label: 'Emergency', textColor: 'text-red-700 dark:text-red-300' },
+  urgent: { color: 'bg-orange-500', label: 'Urgent', textColor: 'text-orange-700 dark:text-orange-300' },
+  routine: { color: 'bg-green-500', label: 'Routine', textColor: 'text-green-700 dark:text-green-300' }
 };
 
 export function EMRViewer({ patient }: EMRViewerProps) {
@@ -41,21 +78,62 @@ export function EMRViewer({ patient }: EMRViewerProps) {
   const [showEntryForm, setShowEntryForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState<EMREntry | null>(null);
   const [filterType, setFilterType] = useState<EMREntry['entryType'] | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'date' | 'type' | 'priority'>('date');
+  const [viewMode, setViewMode] = useState<'list' | 'timeline' | 'summary'>('list');
+  const [expandedEntries, setExpandedEntries] = useState<Set<string>>(new Set());
 
   const emrEntries = getPatientEMREntries(patient.id);
   const permissions = user ? ROLE_PERMISSIONS[user.role] : null;
 
-  const filteredEntries = filterType === 'all' 
-    ? emrEntries 
-    : emrEntries.filter(entry => entry.entryType === filterType);
+  // Enhanced filtering and searching
+  const filteredEntries = emrEntries.filter(entry => {
+    const matchesType = filterType === 'all' || entry.entryType === filterType;
+    const matchesSearch = !searchQuery || 
+      entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      entry.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      entry.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchesType && matchesSearch;
+  }).sort((a, b) => {
+    switch (sortBy) {
+      case 'date':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case 'type':
+        return a.entryType.localeCompare(b.entryType);
+      case 'priority':
+        const priorityOrder = { emergent: 3, urgent: 2, routine: 1 };
+        return (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - 
+               (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
+      default:
+        return 0;
+    }
+  });
 
   const canWrite = permissions?.canWrite && user;
   const canDelete = permissions?.canDelete;
   const canAmend = permissions?.canAmend;
 
+  // Statistics for dashboard
+  const stats = {
+    total: emrEntries.length,
+    consultations: emrEntries.filter(e => e.entryType === 'consultation').length,
+    vitals: emrEntries.filter(e => e.entryType === 'vital_signs').length,
+    medications: emrEntries.filter(e => e.entryType === 'medication').length,
+    pending: emrEntries.filter(e => e.followUpRequired).length
+  };
+
+  const toggleEntryExpansion = (entryId: string) => {
+    const newExpanded = new Set(expandedEntries);
+    if (newExpanded.has(entryId)) {
+      newExpanded.delete(entryId);
+    } else {
+      newExpanded.add(entryId);
+    }
+    setExpandedEntries(newExpanded);
+  };
+
   // AI Agent Integration for EMR
   const handleAIAnalysis = (entry: EMREntry) => {
-    // Trigger clinical decision support agent
     triggerAgentAction('clinical-decision-support', 'Analyze EMR entry', {
       patientId: patient.id,
       entryId: entry.id,
@@ -63,7 +141,6 @@ export function EMRViewer({ patient }: EMRViewerProps) {
       content: entry.content
     });
 
-    // Generate AI recommendation based on entry analysis
     if (entry.entryType === 'consultation' && entry.clinicalNotes) {
       addRecommendation({
         type: 'suggestion',
@@ -76,6 +153,7 @@ export function EMRViewer({ patient }: EMRViewerProps) {
       });
     }
   };
+
   const handleDeleteEntry = (entryId: string) => {
     if (window.confirm('Are you sure you want to delete this EMR entry?')) {
       deleteEMREntry(entryId);
@@ -92,65 +170,62 @@ export function EMRViewer({ patient }: EMRViewerProps) {
     });
   };
 
+  const formatRelativeTime = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return formatDate(dateString);
+  };
+
   const renderVitalSigns = (data: any) => {
     if (!data) return null;
     
+    const vitalItems = [
+      { key: 'temperature', label: 'Temp', value: data.temperature, unit: '°C', icon: Thermometer, color: 'text-red-500' },
+      { key: 'bloodPressure', label: 'BP', value: data.bloodPressure ? `${data.bloodPressure.systolic}/${data.bloodPressure.diastolic}` : null, unit: 'mmHg', icon: Heart, color: 'text-blue-500' },
+      { key: 'heartRate', label: 'HR', value: data.heartRate, unit: 'bpm', icon: PulseIcon, color: 'text-green-500' },
+      { key: 'oxygenSaturation', label: 'SpO₂', value: data.oxygenSaturation, unit: '%', icon: Activity, color: 'text-teal-500' }
+    ];
+    
     return (
-      <div className="bg-rak-beige-50 dark:bg-rak-beige-900/20 rounded-lg p-4 mt-3">
-        <h5 className="font-medium text-rak-beige-800 dark:text-rak-beige-400 mb-3">Vital Signs</h5>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {data.temperature && (
-          <div className="text-sm">
-            <span className="font-medium text-gray-700 dark:text-gray-300">Temperature:</span>
-            <span className="ml-1 text-gray-900 dark:text-white">{data.temperature}°{data.temperatureUnit === 'fahrenheit' ? 'F' : 'C'}</span>
-          </div>
-        )}
-        {data.bloodPressure && (
-          <div className="text-sm">
-            <span className="font-medium text-gray-700 dark:text-gray-300">BP:</span>
-            <span className="ml-1 text-gray-900 dark:text-white">{data.bloodPressure.systolic}/{data.bloodPressure.diastolic} mmHg</span>
-          </div>
-        )}
-        {data.heartRate && (
-          <div className="text-sm">
-            <span className="font-medium text-gray-700 dark:text-gray-300">HR:</span>
-            <span className="ml-1 text-gray-900 dark:text-white">{data.heartRate} bpm</span>
-          </div>
-        )}
-        {data.oxygenSaturation && (
-          <div className="text-sm">
-            <span className="font-medium text-gray-700 dark:text-gray-300">SpO₂:</span>
-            <span className="ml-1 text-gray-900 dark:text-white">{data.oxygenSaturation}%</span>
-          </div>
-        )}
-        {data.weight && (
-          <div className="text-sm">
-            <span className="font-medium text-gray-700 dark:text-gray-300">Weight:</span>
-            <span className="ml-1 text-gray-900 dark:text-white">{data.weight} {data.weightUnit || 'kg'}</span>
-          </div>
-        )}
-        {data.height && (
-          <div className="text-sm">
-            <span className="font-medium text-gray-700 dark:text-gray-300">Height:</span>
-            <span className="ml-1 text-gray-900 dark:text-white">{data.height} {data.heightUnit || 'cm'}</span>
-          </div>
-        )}
-        {data.bmi && (
-          <div className="text-sm">
-            <span className="font-medium text-gray-700 dark:text-gray-300">BMI:</span>
-            <span className="ml-1 text-gray-900 dark:text-white">{data.bmi.toFixed(1)}</span>
-          </div>
-        )}
-        {data.painScale !== undefined && (
-          <div className="text-sm">
-            <span className="font-medium text-gray-700 dark:text-gray-300">Pain Scale:</span>
-            <span className="ml-1 text-gray-900 dark:text-white">{data.painScale}/10</span>
-          </div>
-        )}
+      <div className="bg-gradient-to-r from-teal-50 to-blue-50 dark:from-teal-900/20 dark:to-blue-900/20 rounded-xl p-6 mt-4 border border-teal-200 dark:border-teal-700">
+        <div className="flex items-center justify-between mb-4">
+          <h5 className="font-semibold text-teal-800 dark:text-teal-300 flex items-center">
+            <PulseIcon className="w-5 h-5 mr-2" />
+            Vital Signs
+          </h5>
+          <span className="text-xs text-teal-600 dark:text-teal-400 bg-teal-100 dark:bg-teal-900/40 px-2 py-1 rounded-full">
+            {data.recordedAt ? formatRelativeTime(data.recordedAt) : 'Recent'}
+          </span>
         </div>
+        
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {vitalItems.map(item => {
+            if (!item.value) return null;
+            const Icon = item.icon;
+            return (
+              <div key={item.key} className="bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm border border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-1">
+                  <Icon className={`w-4 h-4 ${item.color}`} />
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{item.label}</span>
+                </div>
+                <div className="text-lg font-bold text-gray-900 dark:text-white">{item.value}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{item.unit}</div>
+              </div>
+            );
+          })}
+        </div>
+        
         {data.recordedBy && (
-          <div className="mt-3 pt-3 border-t border-rak-beige-200 dark:border-rak-beige-800 text-xs text-rak-beige-700 dark:text-rak-beige-400">
-            Recorded by: {data.recordedBy} • {data.recordedAt ? new Date(data.recordedAt).toLocaleString() : ''}
+          <div className="mt-4 pt-3 border-t border-teal-200 dark:border-teal-700 text-xs text-teal-700 dark:text-teal-400">
+            <User className="w-3 h-3 inline mr-1" />
+            Recorded by: {data.recordedBy}
           </div>
         )}
       </div>
@@ -161,70 +236,44 @@ export function EMRViewer({ patient }: EMRViewerProps) {
     if (!entry.clinicalNotes) return null;
     
     const notes = entry.clinicalNotes;
+    const sections = [
+      { key: 'chiefComplaint', label: 'Chief Complaint', content: notes.chiefComplaint },
+      { key: 'historyOfPresentIllness', label: 'History of Present Illness', content: notes.historyOfPresentIllness },
+      { key: 'physicalExamination', label: 'Physical Examination', content: notes.physicalExamination },
+      { key: 'assessment', label: 'Assessment', content: notes.assessment },
+      { key: 'plan', label: 'Plan', content: notes.plan }
+    ];
     
     return (
-      <div className="bg-rak-pink-50 dark:bg-rak-pink-900/20 rounded-lg p-4 mt-3">
-        <h5 className="font-medium text-rak-magenta-800 dark:text-rak-magenta-400 mb-3">Clinical Notes</h5>
-        <div className="space-y-3">
-          {notes.chiefComplaint && (
-            <div>
-              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Chief Complaint:</span>
-              <p className="text-gray-900 dark:text-white mt-1">{notes.chiefComplaint}</p>
-            </div>
-          )}
-          
-          {notes.historyOfPresentIllness && (
-            <div>
-              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">History of Present Illness:</span>
-              <p className="text-gray-900 dark:text-white mt-1">{notes.historyOfPresentIllness}</p>
-            </div>
-          )}
-          
-          {notes.reviewOfSystems && (
-            <div>
-              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Review of Systems:</span>
-              <p className="text-gray-900 dark:text-white mt-1">{notes.reviewOfSystems}</p>
-            </div>
-          )}
-          
-          {notes.physicalExamination && (
-            <div>
-              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Physical Examination:</span>
-              <p className="text-gray-900 dark:text-white mt-1">{notes.physicalExamination}</p>
-            </div>
-          )}
-          
-          {notes.assessment && (
-            <div>
-              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Assessment:</span>
-              <p className="text-gray-900 dark:text-white mt-1">{notes.assessment}</p>
-            </div>
-          )}
-          
-          {notes.plan && (
-            <div>
-              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Plan:</span>
-              <p className="text-gray-900 dark:text-white mt-1 whitespace-pre-line">{notes.plan}</p>
-            </div>
-          )}
-          
-          {notes.differentialDiagnosis && notes.differentialDiagnosis.length > 0 && (
-            <div>
-              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">Differential Diagnosis:</span>
-              <ul className="list-disc list-inside text-gray-900 dark:text-white mt-1">
-                {notes.differentialDiagnosis.map((diagnosis, index) => (
-                  <li key={index}>{diagnosis}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 mt-4 border border-blue-200 dark:border-blue-700">
+        <h5 className="font-semibold text-blue-800 dark:text-blue-300 mb-4 flex items-center">
+          <Stethoscope className="w-5 h-5 mr-2" />
+          Clinical Notes
+        </h5>
+        
+        <div className="space-y-4">
+          {sections.map(section => {
+            if (!section.content) return null;
+            return (
+              <div key={section.key} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+                <h6 className="font-medium text-blue-700 dark:text-blue-300 mb-2 text-sm">
+                  {section.label}
+                </h6>
+                <p className="text-gray-900 dark:text-white text-sm leading-relaxed whitespace-pre-line">
+                  {section.content}
+                </p>
+              </div>
+            );
+          })}
           
           {notes.icdCodes && notes.icdCodes.length > 0 && (
-            <div>
-              <span className="font-medium text-rak-magenta-700 dark:text-rak-magenta-300">ICD Codes:</span>
-              <div className="flex flex-wrap gap-2 mt-1">
+            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+              <h6 className="font-medium text-blue-700 dark:text-blue-300 mb-2 text-sm">
+                ICD Codes
+              </h6>
+              <div className="flex flex-wrap gap-2">
                 {notes.icdCodes.map((code, index) => (
-                  <span key={index} className="bg-rak-pink-100 dark:bg-rak-pink-900/40 text-rak-magenta-800 dark:text-rak-magenta-400 px-2 py-1 rounded text-sm font-mono">
+                  <span key={index} className="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 px-3 py-1 rounded-full text-xs font-mono border border-blue-200 dark:border-blue-700">
                     {code}
                   </span>
                 ))}
@@ -236,186 +285,306 @@ export function EMRViewer({ patient }: EMRViewerProps) {
     );
   };
 
+  const renderEntryCard = (entry: EMREntry) => {
+    const Icon = entryTypeIcons[entry.entryType];
+    const isExpanded = expandedEntries.has(entry.id);
+    const priority = entry.priority as keyof typeof priorityConfig;
+    
+    return (
+      <div
+        key={entry.id}
+        className={`group relative overflow-hidden rounded-xl border-2 transition-all duration-300 hover:shadow-xl hover:scale-[1.02] ${entryTypeColors[entry.entryType]}`}
+      >
+        {/* Priority indicator */}
+        {priority && (
+          <div className={`absolute top-0 left-0 w-1 h-full ${priorityConfig[priority].color}`} />
+        )}
+        
+        <div className="p-6">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start space-x-4 rtl:space-x-reverse flex-1">
+              <div className="p-3 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700">
+                <Icon className="w-6 h-6" />
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 rtl:space-x-reverse mb-2">
+                  <h4 className="font-bold text-lg truncate">{entry.title}</h4>
+                  {entry.followUpRequired && (
+                    <div className="flex items-center space-x-1 bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full text-xs">
+                      <Clock className="w-3 h-3" />
+                      <span>Follow-up</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center space-x-4 rtl:space-x-reverse text-sm opacity-75 mb-2">
+                  <span className="flex items-center space-x-1">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatRelativeTime(entry.createdAt)}</span>
+                  </span>
+                  <span className="capitalize">{entry.entryType.replace('_', ' ')}</span>
+                  {priority && (
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium bg-white dark:bg-gray-800 ${priorityConfig[priority].textColor}`}>
+                      {priorityConfig[priority].label}
+                    </span>
+                  )}
+                </div>
+                
+                <p className={`text-sm leading-relaxed ${isExpanded ? '' : 'line-clamp-2'}`}>
+                  {entry.content}
+                </p>
+              </div>
+            </div>
+            
+            {/* Status badge */}
+            <div className="flex items-center space-x-2 rtl:space-x-reverse ml-4">
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                entry.status === 'final' ? 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700' :
+                entry.status === 'draft' ? 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/40 dark:text-yellow-300 dark:border-yellow-700' :
+                'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700'
+              }`}>
+                {entry.status === 'final' && <CheckCircle className="w-3 h-3 inline mr-1" />}
+                {entry.status}
+              </span>
+            </div>
+          </div>
+          
+          {/* Expanded content */}
+          {isExpanded && (
+            <div className="mt-4 space-y-4">
+              {entry.entryType === 'vital_signs' && renderVitalSigns(entry.data)}
+              {entry.entryType === 'consultation' && renderClinicalNotes(entry)}
+              
+              {entry.followUpRequired && entry.followUpDate && (
+                <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-300 mb-2">
+                    <Clock className="w-4 h-4" />
+                    <span className="font-semibold">Follow-up Required</span>
+                  </div>
+                  <p className="text-orange-700 dark:text-orange-300 text-sm">
+                    Scheduled for: {formatDate(entry.followUpDate)}
+                  </p>
+                </div>
+              )}
+              
+              {entry.tags && entry.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {entry.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-white dark:bg-gray-800 rounded-full text-xs font-medium border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Action buttons */}
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <button
+                onClick={() => toggleEntryExpansion(entry.id)}
+                className="flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                <span>{isExpanded ? 'Less' : 'More'}</span>
+              </button>
+              
+              <button
+                onClick={() => setSelectedEntry(entry)}
+                className="flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                <span>View</span>
+              </button>
+            </div>
+            
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              {user?.role === 'doctor' && (
+                <button
+                  onClick={() => handleAIAnalysis(entry)}
+                  className="p-2 rounded-lg bg-gradient-to-r from-rak-magenta-500 to-rak-magenta-600 text-white hover:from-rak-magenta-600 hover:to-rak-magenta-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                  title="AI Analysis"
+                >
+                  <Bot className="w-4 h-4" />
+                </button>
+              )}
+              
+              {canAmend && entry.createdBy === user?.id && (
+                <button
+                  onClick={() => setEditingEntry(entry)}
+                  className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 transition-colors"
+                >
+                  <Edit className="w-4 h-4" />
+                </button>
+              )}
+              
+              {canDelete && entry.createdBy === user?.id && (
+                <button
+                  onClick={() => handleDeleteEntry(entry.id)}
+                  className="p-2 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+              
+              <button className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="bg-rak-white dark:bg-gray-800 rounded-lg border border-rak-beige-200 dark:border-gray-700">
-      {/* Header */}
-      <div className="p-6 border-b border-rak-beige-200 dark:border-gray-700">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              Electronic Medical Record
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              {patient.firstName} {patient.lastName} • MRN: {patient.mrn}
-            </p>
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden">
+      {/* Enhanced Header */}
+      <div className="bg-gradient-to-r from-rak-magenta-600 to-rak-magenta-700 text-white p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+              <FileText className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">Electronic Medical Record</h2>
+              <p className="text-rak-magenta-100">
+                {patient.firstName} {patient.lastName} • MRN: {patient.mrn}
+              </p>
+            </div>
           </div>
           
           {canWrite && (
             <button
               onClick={() => setShowEntryForm(true)}
-              className="flex items-center space-x-2 rtl:space-x-reverse bg-rak-magenta-600 hover:bg-rak-magenta-700 text-white px-4 py-2 rounded-md transition-colors"
+              className="flex items-center space-x-2 bg-white text-rak-magenta-600 px-6 py-3 rounded-xl font-semibold hover:bg-rak-magenta-50 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
               <span>Add Entry</span>
             </button>
           )}
         </div>
 
-        {/* Filter */}
-        <div className="flex items-center space-x-3 rtl:space-x-reverse">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Filter by type:
-          </label>
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value as any)}
-            className="border border-rak-beige-300 dark:border-gray-600 rounded-md px-3 py-1 bg-rak-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500"
-          >
-            <option value="all">All Entries</option>
-            <option value="consultation">Consultations</option>
-            <option value="nursing_note">Nursing Notes</option>
-            <option value="diagnostic_result">Diagnostic Results</option>
-            <option value="medication">Medications</option>
-            <option value="vital_signs">Vital Signs</option>
-            <option value="procedure">Procedures</option>
-            <option value="discharge_summary">Discharge Summary</option>
-          </select>
+        {/* Stats Dashboard */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-sm text-rak-magenta-100">Total Entries</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold">{stats.consultations}</div>
+            <div className="text-sm text-rak-magenta-100">Consultations</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold">{stats.vitals}</div>
+            <div className="text-sm text-rak-magenta-100">Vital Signs</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold">{stats.medications}</div>
+            <div className="text-sm text-rak-magenta-100">Medications</div>
+          </div>
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 text-center">
+            <div className="text-2xl font-bold text-orange-300">{stats.pending}</div>
+            <div className="text-sm text-rak-magenta-100">Follow-ups</div>
+          </div>
         </div>
       </div>
 
-      {/* EMR Entries */}
+      {/* Enhanced Controls */}
+      <div className="p-6 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+          {/* Search and Filter */}
+          <div className="flex items-center space-x-4 rtl:space-x-reverse flex-1">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search entries..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 rtl:pr-10 rtl:pl-3 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 focus:border-transparent transition-all"
+              />
+            </div>
+            
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as any)}
+              className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 transition-all"
+            >
+              <option value="all">All Types</option>
+              <option value="consultation">Consultations</option>
+              <option value="nursing_note">Nursing Notes</option>
+              <option value="diagnostic_result">Diagnostic Results</option>
+              <option value="medication">Medications</option>
+              <option value="vital_signs">Vital Signs</option>
+              <option value="procedure">Procedures</option>
+              <option value="discharge_summary">Discharge Summary</option>
+            </select>
+          </div>
+          
+          {/* View Controls */}
+          <div className="flex items-center space-x-3 rtl:space-x-reverse">
+            <div className="flex items-center space-x-1 bg-white dark:bg-gray-800 rounded-xl p-1 border border-gray-200 dark:border-gray-700">
+              {['list', 'timeline', 'summary'].map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => setViewMode(mode as any)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    viewMode === mode
+                      ? 'bg-rak-magenta-600 text-white shadow-md'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
+            </div>
+            
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 text-sm"
+            >
+              <option value="date">Sort by Date</option>
+              <option value="type">Sort by Type</option>
+              <option value="priority">Sort by Priority</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area */}
       <div className="p-6">
         {filteredEntries.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400">
-              No EMR entries found for this patient
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gradient-to-br from-rak-magenta-100 to-rak-pink-100 dark:from-rak-magenta-900/20 dark:to-rak-pink-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FileText className="w-12 h-12 text-rak-magenta-600 dark:text-rak-magenta-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              No EMR entries found
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              {searchQuery ? 'Try adjusting your search criteria' : 'Start by adding the first medical entry for this patient'}
             </p>
-            {canWrite && (
+            {canWrite && !searchQuery && (
               <button
                 onClick={() => setShowEntryForm(true)}
-                className="mt-4 text-rak-magenta-600 hover:text-rak-magenta-700 font-medium"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-rak-magenta-600 to-rak-magenta-700 text-white px-6 py-3 rounded-xl font-semibold hover:from-rak-magenta-700 hover:to-rak-magenta-800 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                Add the first entry
+                <Plus className="w-5 h-5" />
+                <span>Add First Entry</span>
               </button>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredEntries.map((entry) => {
-              const Icon = entryTypeIcons[entry.entryType];
-              
-              return (
-                <div
-                  key={entry.id}
-                  className={`border rounded-lg p-4 hover:shadow-md transition-shadow ${entryTypeColors[entry.entryType]}`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-3 rtl:space-x-reverse">
-                      <Icon className="w-5 h-5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-semibold text-sm">{entry.title}</h4>
-                        <p className="text-xs opacity-80">
-                          {formatDate(entry.createdAt)} • {entry.entryType.replace('_', ' ')}
-                          {entry.priority && (
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
-                              entry.priority === 'emergent' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
-                              entry.priority === 'urgent' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                              'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                            }`}>
-                              {entry.priority}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        entry.status === 'final' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                        entry.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                        'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-                      }`}>
-                        {entry.status}
-                      </span>
-                      
-                      {entry.followUpRequired && (
-                        <span className="text-orange-600 dark:text-orange-400" title="Follow-up required">
-                          <Clock className="w-4 h-4" />
-                        </span>
-                      )}
-                      
-                      <button
-                        onClick={() => setSelectedEntry(entry)}
-                        className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      
-                      {canAmend && entry.createdBy === user?.id && (
-                        <button
-                          onClick={() => setEditingEntry(entry)}
-                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                      )}
-                      
-                      {user?.role === 'doctor' && (
-                        <button
-                          onClick={() => handleAIAnalysis(entry)}
-                          className="p-1 text-gray-400 hover:text-rak-magenta-600 transition-colors"
-                          title="AI Analysis"
-                        >
-                          <Bot className="w-4 h-4" />
-                        </button>
-                      )}
-                      
-                      {canDelete && entry.createdBy === user?.id && (
-                        <button
-                          onClick={() => handleDeleteEntry(entry.id)}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="text-sm opacity-90 mb-3">
-                    {entry.content}
-                  </div>
-                  
-                  {entry.entryType === 'vital_signs' && renderVitalSigns(entry.data)}
-                  {entry.entryType === 'consultation' && renderClinicalNotes(entry)}
-                  
-                  {entry.followUpRequired && entry.followUpDate && (
-                    <div className="bg-rak-warning-50 dark:bg-rak-warning-900/20 border border-rak-warning-200 dark:border-rak-warning-800 rounded-md p-3 mt-3">
-                      <div className="flex items-center space-x-2 text-orange-800 dark:text-orange-400">
-                        <Clock className="w-4 h-4" />
-                        <span className="font-medium">Follow-up Required</span>
-                      </div>
-                      <p className="text-orange-700 dark:text-orange-300 text-sm mt-1">
-                        Scheduled for: {formatDate(entry.followUpDate)}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {entry.tags && entry.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {entry.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-rak-white dark:bg-gray-800 rounded-full text-xs font-medium opacity-80"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div className="space-y-6">
+            {filteredEntries.map(renderEntryCard)}
           </div>
         )}
       </div>
@@ -436,100 +605,70 @@ export function EMRViewer({ patient }: EMRViewerProps) {
         />
       )}
 
-      {/* Entry Detail Modal */}
+      {/* Enhanced Entry Detail Modal */}
       {selectedEntry && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-rak-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="p-6 border-b border-rak-beige-200 dark:border-gray-700">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            <div className="bg-gradient-to-r from-rak-magenta-600 to-rak-magenta-700 text-white p-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {selectedEntry.title}
-                </h3>
+                <div className="flex items-center space-x-4">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    {React.createElement(entryTypeIcons[selectedEntry.entryType], { className: "w-6 h-6" })}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">{selectedEntry.title}</h3>
+                    <p className="text-rak-magenta-100 text-sm">
+                      {formatDate(selectedEntry.createdAt)} • {selectedEntry.entryType.replace('_', ' ')}
+                    </p>
+                  </div>
+                </div>
                 <button
                   onClick={() => setSelectedEntry(null)}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
                 >
-                  ×
+                  <span className="text-2xl">×</span>
                 </button>
               </div>
             </div>
             
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Content
-                  </label>
-                  <p className="text-gray-900 dark:text-white">{selectedEntry.content}</p>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="space-y-6">
+                <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Content</h4>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{selectedEntry.content}</p>
                 </div>
                 
                 {selectedEntry.entryType === 'consultation' && renderClinicalNotes(selectedEntry)}
                 {selectedEntry.entryType === 'vital_signs' && renderVitalSigns(selectedEntry.data)}
                 
-                {selectedEntry.data && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Structured Data
-                    </label>
-                    <div className="bg-rak-beige-50 dark:bg-gray-900 p-3 rounded-md">
-                      {Object.entries(selectedEntry.data).map(([key, value]) => (
-                        <div key={key} className="mb-2 last:mb-0">
-                          <span className="font-medium text-gray-700 dark:text-gray-300 capitalize">
-                            {key.replace(/([A-Z])/g, ' $1').trim()}:
-                          </span>
-                          <span className="ml-2 text-gray-900 dark:text-white">
-                            {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <label className="block font-medium text-gray-700 dark:text-gray-300">
-                      Created
-                    </label>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {formatDate(selectedEntry.createdAt)}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block font-medium text-gray-700 dark:text-gray-300">
-                      Status
-                    </label>
-                    <p className="text-gray-600 dark:text-gray-400 capitalize">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
+                    <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Status</h5>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedEntry.status === 'final' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
+                      selectedEntry.status === 'draft' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300' :
+                      'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+                    }`}>
+                      {selectedEntry.status === 'final' && <CheckCircle className="w-4 h-4 mr-1" />}
                       {selectedEntry.status}
-                    </p>
+                    </span>
                   </div>
+                  
                   {selectedEntry.priority && (
-                    <div>
-                      <label className="block font-medium text-gray-700 dark:text-gray-300">
-                        Priority
-                      </label>
-                      <p className="text-gray-600 dark:text-gray-400 capitalize">
-                        {selectedEntry.priority}
-                      </p>
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
+                      <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Priority</h5>
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-3 h-3 rounded-full ${priorityConfig[selectedEntry.priority as keyof typeof priorityConfig]?.color}`}></div>
+                        <span className="text-sm font-medium capitalize">{selectedEntry.priority}</span>
+                      </div>
                     </div>
                   )}
+                  
                   {selectedEntry.departmentId && (
-                    <div>
-                      <label className="block font-medium text-gray-700 dark:text-gray-300">
-                        Department
-                      </label>
-                      <p className="text-gray-600 dark:text-gray-400">
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
+                      <h5 className="font-semibold text-gray-900 dark:text-white mb-2">Department</h5>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">
                         {selectedEntry.departmentId.replace('_', ' ')}
-                      </p>
-                    </div>
-                  )}
-                  {selectedEntry.reviewedBy && (
-                    <div>
-                      <label className="block font-medium text-gray-700 dark:text-gray-300">
-                        Reviewed By
-                      </label>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {selectedEntry.reviewedBy}
                       </p>
                     </div>
                   )}
