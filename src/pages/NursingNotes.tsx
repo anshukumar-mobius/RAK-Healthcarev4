@@ -118,11 +118,32 @@ export function NursingNotes() {
   useEffect(() => {
     // Load and filter notes based on encounterId if provided
     const allNotes = nursingNotesData as NursingNote[];
+    
+    // Enrich notes with patient data from the store
+    const enrichedNotes = allNotes.map(note => {
+      const patient = patients.find(p => p.id === note.patientId);
+      if (patient) {
+        return {
+          ...note,
+          patient: {
+            id: patient.id,
+            name: `${patient.firstName} ${patient.lastName}`,
+            mrn: patient.mrn,
+            dateOfBirth: patient.dateOfBirth,
+            gender: patient.gender,
+            room: 'N/A',
+            bed: 'N/A'
+          }
+        };
+      }
+      return note;
+    });
+    
     if (encounterId) {
-      const filteredNotes = allNotes.filter(note => note.encounterId === encounterId);
+      const filteredNotes = enrichedNotes.filter(note => note.encounterId === encounterId);
       setNotes(filteredNotes);
     } else {
-      setNotes(allNotes);
+      setNotes(enrichedNotes);
     }
   }, [encounterId]);
 
