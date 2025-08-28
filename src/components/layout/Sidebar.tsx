@@ -1,6 +1,5 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -19,10 +18,15 @@ import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../hooks/useAuth';
 import { t } from '../../utils/translations';
 
+interface MenuItem {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  path: string;
+  roles: string[];
 }
 
 const menuItems: MenuItem[] = [
-  path: string;
+  {
     icon: LayoutDashboard,
     label: 'dashboard',
     path: '/dashboard',
@@ -96,13 +100,9 @@ const menuItems: MenuItem[] = [
   }
 ];
 
-
-export function Sidebar() {
 export function Sidebar() {
   const { language, isRTL } = useApp();
   const { user, canAccessRoute } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
   const location = useLocation();
   const navigate = useNavigate();
 
