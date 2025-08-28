@@ -72,15 +72,31 @@ export function CarePlanOverview() {
   useEffect(() => {
     // Load care plans and filter by assigned nurse
     const allPlans = carePlanData as PatientCarePlan[];
-    // In a real system, you'd filter by assignedNurse === user?.id
-    // For demo, we'll show all plans but you can filter by user
-    const assignedPlans = allPlans.map(plan => ({
-      ...plan,
-      assignedNurse: user?.name || 'Current Nurse',
-      nextReviewDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-    }));
+    
+    // Enrich care plans with patient data from the EMR store
+    const assignedPlans = allPlans.map(plan => {
+      const patient = patients.find(p => p.id === plan.patientId);
+      
+      return {
+        ...plan,
+        patient: {
+          id: patient?.id || plan.patientId || '',
+          name: patient ? `${patient.firstName} ${patient.lastName}` : 'Unknown Patient',
+          mrn: patient?.mrn || 'N/A',
+          dateOfBirth: patient?.dateOfBirth || '1990-01-01',
+          gender: patient?.gender || 'Unknown',
+          room: 'N/A',
+          bed: 'N/A',
+          admissionDate: new Date().toISOString(),
+          primaryDiagnosis: patient?.chronicConditions?.[0] || plan.diagnoses?.[0]?.label || 'Not specified'
+        },
+        assignedNurse: user?.name || 'Current Nurse',
+        nextReviewDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      };
+    });
+    
     setCarePlans(assignedPlans);
-  }, [user]);
+  }, [user, patients]);
 
   const filteredPlans = carePlans.filter(plan => {
     const matchesSearch = plan.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
