@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileText, Download, Save, Edit, ArrowLeft, User, Calendar, MapPin } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
+import { FileText, Download, Save, Edit, ArrowLeft, User } from 'lucide-react';
 import dischargeSummaryData from '../data/dischargeSummary.json';
 
 interface DischargeSummarySection {
@@ -15,19 +14,37 @@ interface DischargeSummary {
   patient: {
     id: string;
     name: string;
+    mrn?: string;
+    dateOfBirth?: string;
+    gender?: string;
   };
   sections: DischargeSummarySection[];
   status: string;
+  dischargeDate?: string;
+  attendingPhysician?: string;
 }
 
 export function DischargeSummary() {
   const { encounterId } = useParams<{ encounterId: string }>();
   const navigate = useNavigate();
-  const { language } = useApp();
   
-  const [summary, setSummary] = useState<DischargeSummary>(dischargeSummaryData);
+  const [summary, setSummary] = useState<DischargeSummary | null>(null);
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+
+  useEffect(() => {
+    // Find the discharge summary for the specific encounter
+    const foundSummary = dischargeSummaryData.find(
+      (item: any) => item.encounterId === encounterId
+    );
+    
+    if (foundSummary) {
+      setSummary(foundSummary as DischargeSummary);
+    } else {
+      // Fallback to first summary if encounter not found
+      setSummary(dischargeSummaryData[0] as DischargeSummary);
+    }
+  }, [encounterId]);
 
   const handleEditSection = (sectionTitle: string, currentText: string) => {
     setEditingSection(sectionTitle);
@@ -35,15 +52,18 @@ export function DischargeSummary() {
   };
 
   const handleSaveSection = () => {
-    if (editingSection) {
-      setSummary(prev => ({
-        ...prev,
-        sections: prev.sections.map(section =>
-          section.title === editingSection
-            ? { ...section, text: editText }
-            : section
-        )
-      }));
+    if (editingSection && summary) {
+      setSummary(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          sections: prev.sections.map(section =>
+            section.title === editingSection
+              ? { ...section, text: editText }
+              : section
+          )
+        };
+      });
       setEditingSection(null);
       setEditText('');
     }
@@ -55,6 +75,8 @@ export function DischargeSummary() {
   };
 
   const handleExport = () => {
+    if (!summary) return;
+    
     const dataStr = JSON.stringify(summary, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -66,6 +88,19 @@ export function DischargeSummary() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  // Show loading state if summary is not loaded yet
+  if (!summary) {
+    return (
+      <div className="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center">
+            <p className="text-gray-600 dark:text-gray-400">Loading discharge summary...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

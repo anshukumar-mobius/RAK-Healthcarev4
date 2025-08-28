@@ -1,26 +1,44 @@
 [
   {
-    "id": "nn-201",
+    "id": "nn-001",
     "encounterId": "V001",
-    "author": "Nurse A",
+    "patientId": "1",
+    "patientName": "Ahmed Al Rashid",
+    "author": "Nurse Fatima Al Zahra",
     "shift": "Day",
     "time": "2025-08-28T08:00:00Z",
-    "vitals": { "bp": "120/78", "hr": 82, "temp": 37.1 },
-    "subjective": "Patient reports mild fatigue.",
-    "objective": "Stable vitals, no edema, urine output adequate.",
-    "assessment": "Improving CHF status.",
-    "plan": "Continue diuretics, monitor electrolytes."
+    "vitals": { "bp": "145/90", "hr": 72, "temp": 36.8, "spo2": 98 },
+    "subjective": "Patient reports feeling well overall. Denies chest pain, shortness of breath, or palpitations. Blood pressure medication compliance good.",
+    "objective": "Alert and oriented x3. Ambulating independently. No acute distress. Hypertension noted on BP reading.",
+    "assessment": "Hypertension monitoring required. Patient stable.",
+    "plan": "Continue current antihypertensive medication. Monitor BP q8h. Encourage lifestyle modifications."
   },
   {
-    "id": "nn-202",
+    "id": "nn-002",
     "encounterId": "V001",
-    "author": "Nurse B",
+    "patientId": "1", 
+    "patientName": "Ahmed Al Rashid",
+    "author": "Nurse Aisha Mohammed",
     "shift": "Evening",
     "time": "2025-08-28T16:00:00Z",
-    "vitals": { "bp": "118/76", "hr": 80, "temp": 36.9 },
-    "subjective": "Reports no pain.",
-    "objective": "Resting comfortably, ambulated 50m with assistance.",
-    "assessment": "Good tolerance to activity.",
-    "plan": "Encourage ambulation, monitor I&O."
+    "vitals": { "bp": "140/88", "hr": 70, "temp": 36.9, "spo2": 99 },
+    "subjective": "No complaints. Reports taking medication as prescribed.",
+    "objective": "Resting comfortably. Good medication compliance noted. No signs of cardiovascular distress.",
+    "assessment": "Hypertension stable on current regimen.",
+    "plan": "Continue monitoring. Patient education on diet and exercise reinforced."
+  },
+  {
+    "id": "nn-003",
+    "encounterId": "V002",
+    "patientId": "2",
+    "patientName": "Sarah Johnson", 
+    "author": "Nurse Mariam Hassan",
+    "shift": "Day",
+    "time": "2025-08-28T09:30:00Z",
+    "vitals": { "bp": "128/82", "hr": 68, "temp": 36.7, "spo2": 98 },
+    "subjective": "Reports good glucose control with current medication. No hypoglycemic episodes. Diet compliance good.",
+    "objective": "Well-appearing female. No signs of diabetic complications. Feet examination normal.",
+    "assessment": "Type 2 diabetes well controlled on Metformin.",
+    "plan": "Continue current diabetes management. Monitor blood glucose. HbA1c pending."
   }
 ]

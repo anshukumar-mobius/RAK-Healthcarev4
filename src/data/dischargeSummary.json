@@ -1,13 +1,74 @@
-{
-  "id": "ds-101",
-  "encounterId": "V001",
-  "patient": { "id": "p-1001", "name": "John Doe" },
-  "sections": [
-    { "title": "Admission", "text": "Admitted with shortness of breath, CHF exacerbation." },
-    { "title": "Hospital Course", "text": "Responded well to IV diuretics. Improved oxygenation." },
-    { "title": "Diagnostics", "text": "Chest X-ray showed pulmonary edema. BNP elevated." },
-    { "title": "Discharge Medications", "text": "Lasix 40mg PO daily, Lisinopril 10mg PO daily." },
-    { "title": "Follow-up", "text": "Cardiology OPD in 2 weeks." }
-  ],
-  "status": "draft"
-}
+[
+  {
+    "id": "ds-001",
+    "encounterId": "V001",
+    "patient": { 
+      "id": "1", 
+      "name": "Ahmed Al Rashid",
+      "mrn": "RAK-2024-001",
+      "dateOfBirth": "1985-03-15",
+      "gender": "male"
+    },
+    "sections": [
+      { 
+        "title": "Admission", 
+        "text": "Admitted for routine annual physical examination and hypertension management. Patient presented for scheduled follow-up with no acute complaints." 
+      },
+      { 
+        "title": "Hospital Course", 
+        "text": "Patient underwent comprehensive physical examination. Blood pressure found to be elevated at 145/90 mmHg despite current medication regimen. No signs of end-organ damage. Patient counseled on lifestyle modifications." 
+      },
+      { 
+        "title": "Diagnostics", 
+        "text": "Vital signs monitoring showed consistent elevation in blood pressure. Annual laboratory work ordered including lipid panel and renal function tests." 
+      },
+      { 
+        "title": "Discharge Medications", 
+        "text": "Continue Lisinopril 10mg PO daily. Patient counseled on medication compliance and timing." 
+      },
+      { 
+        "title": "Follow-up", 
+        "text": "Internal Medicine follow-up in 6 months. Patient advised to monitor blood pressure at home and return if readings consistently > 150/90." 
+      }
+    ],
+    "status": "final",
+    "dischargeDate": "2024-01-07T15:00:00Z",
+    "attendingPhysician": "Dr. Sarah Ahmed"
+  },
+  {
+    "id": "ds-002",
+    "encounterId": "V002", 
+    "patient": { 
+      "id": "2", 
+      "name": "Sarah Johnson",
+      "mrn": "RAK-2024-002",
+      "dateOfBirth": "1992-07-22",
+      "gender": "female"
+    },
+    "sections": [
+      { 
+        "title": "Admission", 
+        "text": "Admitted for routine diabetes follow-up visit. Patient with Type 2 diabetes mellitus on Metformin therapy presenting for quarterly monitoring." 
+      },
+      { 
+        "title": "Hospital Course", 
+        "text": "Patient reported excellent glucose control with home readings averaging 120-140 mg/dL. No episodes of hypoglycemia. Good medication compliance noted. Physical examination unremarkable." 
+      },
+      { 
+        "title": "Diagnostics", 
+        "text": "HbA1c ordered for diabetes monitoring. Routine diabetic foot examination performed - no ulcers or deformities noted. Peripheral pulses intact." 
+      },
+      { 
+        "title": "Discharge Medications", 
+        "text": "Continue Metformin 500mg PO twice daily with meals. Patient counseled on continued adherence to diabetic diet." 
+      },
+      { 
+        "title": "Follow-up", 
+        "text": "Endocrinology follow-up in 3 months. Patient advised to continue home glucose monitoring and return if experiencing symptoms of hyperglycemia or hypoglycemia." 
+      }
+    ],
+    "status": "final",
+    "dischargeDate": "2024-01-06T16:00:00Z", 
+    "attendingPhysician": "Dr. Ahmed Al Rashid"
+  }
+]

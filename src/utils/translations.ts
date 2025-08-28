@@ -41,6 +41,11 @@ export const translations = {
     allergies: 'Allergies',
     medications: 'Medications',
     
+    // Nursing Features
+    dischargeSummary: 'Discharge Summary',
+    nursingNotes: 'Nursing Notes',
+    carePlan: 'Care Plan',
+    
     // Appointments
     newAppointment: 'New Appointment',
     rescheduleAppointment: 'Reschedule Appointment',
@@ -111,6 +116,11 @@ export const translations = {
     vitalSigns: 'العلامات الحيوية',
     allergies: 'الحساسية',
     medications: 'الأدوية',
+    
+    // Nursing Features
+    dischargeSummary: 'ملخص الخروج',
+    nursingNotes: 'ملاحظات التمريض',
+    carePlan: 'خطة الرعاية',
     
     // Appointments
     newAppointment: 'موعد جديد',

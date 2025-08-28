@@ -1,18 +1,47 @@
-{
-  "id": "cp-301",
-  "encounterId": "V001",
-  "diagnoses": [
-    { "code": "CHF", "label": "Congestive Heart Failure" },
-    { "code": "FALL", "label": "High Fall Risk" }
-  ],
-  "goals": [
-    { "id": "g-1", "text": "Maintain oxygen saturation > 95%", "status": "in-progress", "progress": 60 },
-    { "id": "g-2", "text": "Patient ambulates 50m with assistance", "status": "planned", "progress": 0 }
-  ],
-  "interventions": [
-    "Monitor intake & output every 8h",
-    "Administer diuretics as prescribed",
-    "Implement fall precautions",
-    "Encourage progressive ambulation"
-  ]
-}
+[
+  {
+    "id": "cp-001",
+    "encounterId": "V001",
+    "patientId": "1",
+    "patientName": "Ahmed Al Rashid",
+    "diagnoses": [
+      { "code": "I10", "label": "Essential Hypertension" },
+      { "code": "Z51.81", "label": "Therapeutic drug monitoring" }
+    ],
+    "goals": [
+      { "id": "g-1", "text": "Maintain blood pressure < 140/90 mmHg", "status": "in-progress", "progress": 70 },
+      { "id": "g-2", "text": "Patient demonstrates medication compliance", "status": "achieved", "progress": 100 },
+      { "id": "g-3", "text": "Patient verbalizes understanding of lifestyle modifications", "status": "in-progress", "progress": 60 }
+    ],
+    "interventions": [
+      "Monitor blood pressure every 8 hours",
+      "Administer Lisinopril 10mg daily as prescribed",
+      "Educate patient on low-sodium diet",
+      "Encourage regular exercise and weight management",
+      "Monitor for signs of medication side effects"
+    ]
+  },
+  {
+    "id": "cp-002", 
+    "encounterId": "V002",
+    "patientId": "2",
+    "patientName": "Sarah Johnson",
+    "diagnoses": [
+      { "code": "E11.9", "label": "Type 2 diabetes mellitus without complications" },
+      { "code": "Z79.84", "label": "Long term use of oral hypoglycemic drugs" }
+    ],
+    "goals": [
+      { "id": "g-4", "text": "Maintain HbA1c < 7%", "status": "in-progress", "progress": 80 },
+      { "id": "g-5", "text": "Patient demonstrates proper blood glucose monitoring", "status": "achieved", "progress": 100 },
+      { "id": "g-6", "text": "Prevent diabetic complications", "status": "in-progress", "progress": 85 }
+    ],
+    "interventions": [
+      "Monitor blood glucose levels as prescribed",
+      "Administer Metformin 500mg twice daily with meals",
+      "Educate patient on diabetic diet and carbohydrate counting",
+      "Perform routine foot examination",
+      "Monitor for signs of hypoglycemia",
+      "Schedule HbA1c testing"
+    ]
+  }
+]

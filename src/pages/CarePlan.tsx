@@ -1,17 +1,13 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Target, 
   Download, 
   ArrowLeft, 
-  User, 
   CheckCircle, 
-  Clock, 
-  Plus,
   Check,
   X
 } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
 import carePlanData from '../data/carePlan.json';
 
 interface Diagnosis {
@@ -22,13 +18,15 @@ interface Diagnosis {
 interface Goal {
   id: string;
   text: string;
-  status: 'planned' | 'in-progress' | 'completed';
+  status: 'planned' | 'in-progress' | 'completed' | 'achieved';
   progress: number;
 }
 
 interface CarePlan {
   id: string;
   encounterId: string;
+  patientId?: string;
+  patientName?: string;
   diagnoses: Diagnosis[];
   goals: Goal[];
   interventions: string[];
@@ -51,18 +49,35 @@ const suggestedInterventions = [
 export function CarePlan() {
   const { encounterId } = useParams<{ encounterId: string }>();
   const navigate = useNavigate();
-  const { language } = useApp();
   
-  const [carePlan, setCarePlan] = useState<CarePlan>(carePlanData);
+  const [carePlan, setCarePlan] = useState<CarePlan | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [acceptedGoals, setAcceptedGoals] = useState<Set<string>>(new Set());
   const [acceptedInterventions, setAcceptedInterventions] = useState<Set<string>>(new Set());
 
+  useEffect(() => {
+    // Find the care plan for the specific encounter
+    const foundPlan = carePlanData.find(
+      (plan: any) => plan.encounterId === encounterId
+    );
+    
+    if (foundPlan) {
+      setCarePlan(foundPlan as CarePlan);
+    } else {
+      // Fallback to first plan if encounter not found
+      setCarePlan(carePlanData[0] as CarePlan);
+    }
+  }, [encounterId]);
+
   const handleAcceptGoal = (goal: Goal) => {
-    setCarePlan(prev => ({
-      ...prev,
-      goals: [...prev.goals, goal]
-    }));
+    if (!carePlan) return;
+    setCarePlan(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        goals: [...prev.goals, goal]
+      };
+    });
     setAcceptedGoals(prev => new Set([...prev, goal.id]));
   };
 
@@ -71,10 +86,14 @@ export function CarePlan() {
   };
 
   const handleAcceptIntervention = (intervention: string) => {
-    setCarePlan(prev => ({
-      ...prev,
-      interventions: [...prev.interventions, intervention]
-    }));
+    if (!carePlan) return;
+    setCarePlan(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        interventions: [...prev.interventions, intervention]
+      };
+    });
     setAcceptedInterventions(prev => new Set([...prev, intervention]));
   };
 
@@ -82,22 +101,28 @@ export function CarePlan() {
     setAcceptedInterventions(prev => new Set([...prev, intervention]));
   };
 
-  const handleUpdateGoalProgress = (goalId: string, progress: number) => {
-    setCarePlan(prev => ({
-      ...prev,
-      goals: prev.goals.map(goal =>
-        goal.id === goalId 
-          ? { 
-              ...goal, 
-              progress,
-              status: progress === 100 ? 'completed' : progress > 0 ? 'in-progress' : 'planned'
-            }
-          : goal
-      )
-    }));
+  const updateGoalProgress = (goalId: string, progress: number) => {
+    if (!carePlan) return;
+    setCarePlan(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        goals: prev.goals.map(goal =>
+          goal.id === goalId 
+            ? { 
+                ...goal, 
+                progress,
+                status: progress === 100 ? 'completed' as const : progress > 0 ? 'in-progress' as const : 'planned' as const
+              }
+            : goal
+        )
+      };
+    });
   };
 
   const handleExport = () => {
+    if (!carePlan) return;
+    
     const dataStr = JSON.stringify(carePlan, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -109,6 +134,19 @@ export function CarePlan() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  // Show loading state if care plan is not loaded yet
+  if (!carePlan) {
+    return (
+      <div className="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center">
+            <p className="text-gray-600 dark:text-gray-400">Loading care plan...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const getProgressColor = (progress: number) => {
     if (progress === 0) return 'bg-gray-300';
@@ -275,7 +313,7 @@ export function CarePlan() {
                     min="0"
                     max="100"
                     value={goal.progress}
-                    onChange={(e) => handleUpdateGoalProgress(goal.id, parseInt(e.target.value))}
+                    onChange={(e) => updateGoalProgress(goal.id, parseInt(e.target.value))}
                     className="w-32"
                   />
                 </div>
