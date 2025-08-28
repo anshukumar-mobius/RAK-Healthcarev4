@@ -18,7 +18,6 @@ import {
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../hooks/useAuth';
 import { t } from '../../utils/translations';
-import { isFeatureEnabled } from '../../config/featureFlags';
 
 interface MenuItem {
   icon: React.ComponentType<{ className?: string }>;
@@ -102,24 +101,24 @@ const menuItems: MenuItem[] = [
   }
 ];
 
-// BOLT_DS_V1 Feature Menu Items
+// Nursing Feature Menu Items
 const nursingMenuItems: MenuItem[] = [
   {
     icon: FileText,
     label: 'Discharge Summary',
-    path: '/discharge-summary/enc-12345',
+    path: '/discharge-summary/V001',
     roles: ['admin', 'doctor', 'nurse']
   },
   {
     icon: ClipboardList,
     label: 'Nursing Notes',
-    path: '/nursing-notes/enc-12345',
+    path: '/nursing-notes/V001',
     roles: ['admin', 'nurse']
   },
   {
     icon: CheckSquare,
     label: 'Care Plan',
-    path: '/care-plan/enc-12345',
+    path: '/care-plan/V001',
     roles: ['admin', 'nurse']
   }
 ];
@@ -131,12 +130,7 @@ export function Sidebar() {
 
   if (!user) return null;
 
-  let allMenuItems = [...menuItems];
-  
-  // Add BOLT_DS_V1 feature menu items if enabled
-  if (isFeatureEnabled('BOLT_DS_V1')) {
-    allMenuItems = [...allMenuItems, ...nursingMenuItems];
-  }
+  const allMenuItems = [...menuItems, ...nursingMenuItems];
 
   const filteredMenuItems = allMenuItems.filter(item => 
     item.roles.includes(user.role) && canAccessRoute(item.path.substring(1))

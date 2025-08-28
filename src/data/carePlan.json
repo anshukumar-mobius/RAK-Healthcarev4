@@ -1,6 +1,6 @@
 {
   "id": "cp-301",
-  "encounterId": "enc-12345",
+  "encounterId": "V001",
   "diagnoses": [
     { "code": "CHF", "label": "Congestive Heart Failure" },
     { "code": "FALL", "label": "High Fall Risk" }
