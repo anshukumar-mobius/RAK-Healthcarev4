@@ -12,8 +12,7 @@ import {
   Bed,
   ClipboardList,
   Bot,
-  Settings,
-  FileText
+  Settings
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../hooks/useAuth';
