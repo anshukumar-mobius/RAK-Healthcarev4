@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   FileText, 
@@ -13,12 +13,13 @@ import {
   Droplets,
   Save
 } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
 import nursingNotesData from '../data/nursingNotes.json';
 
 interface NursingNote {
   id: string;
   encounterId: string;
+  patientId?: string;
+  patientName?: string;
   author: string;
   shift: 'Day' | 'Evening' | 'Night';
   time: string;
@@ -26,6 +27,7 @@ interface NursingNote {
     bp: string;
     hr: number;
     temp: number;
+    spo2?: number;
   };
   subjective: string;
   objective: string;
@@ -55,9 +57,8 @@ const shiftColors = {
 export function NursingNotes() {
   const { encounterId } = useParams<{ encounterId: string }>();
   const navigate = useNavigate();
-  const { language } = useApp();
   
-  const [notes, setNotes] = useState<NursingNote[]>(nursingNotesData);
+  const [notes, setNotes] = useState<NursingNote[]>(nursingNotesData as NursingNote[]);
   const [showNewNote, setShowNewNote] = useState(false);
   const [selectedShift, setSelectedShift] = useState<'all' | 'Day' | 'Evening' | 'Night'>('all');
   const [newNote, setNewNote] = useState({
