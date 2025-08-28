@@ -16,7 +16,9 @@ import {
   AlertTriangle,
   CheckCircle,
   Bed,
-  DollarSign
+  DollarSign,
+  FileText,
+  Target
 } from 'lucide-react';
 import { t } from '../utils/translations';
 import { isFeatureEnabled } from '../config/featureFlags';
