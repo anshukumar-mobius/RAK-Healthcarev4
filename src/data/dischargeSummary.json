@@ -1,6 +1,6 @@
 {
   "id": "ds-101",
-  "encounterId": "enc-12345",
+  "encounterId": "V001",
   "patient": { "id": "p-1001", "name": "John Doe" },
   "sections": [
     { "title": "Admission", "text": "Admitted with shortness of breath, CHF exacerbation." },

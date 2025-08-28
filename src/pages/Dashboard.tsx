@@ -19,7 +19,6 @@ import {
   DollarSign
 } from 'lucide-react';
 import { t } from '../utils/translations';
-import { isFeatureEnabled } from '../config/featureFlags';
 import { useNavigate } from 'react-router-dom';
 
 // Mock data for demonstration
@@ -136,40 +135,38 @@ export function Dashboard() {
       {/* Advanced Analytics */}
       <AdvancedAnalytics role="admin" />
 
-      {/* BOLT_DS_V1 Feature Quick Access */}
-      {isFeatureEnabled('BOLT_DS_V1') && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-          <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-400 mb-4">
-            Nursing Modules (BOLT_DS_V1)
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              onClick={() => navigate('/discharge-summary/enc-12345')}
-              className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-shadow text-left"
-            >
-              <FileText className="w-6 h-6 text-blue-600 mb-2" />
-              <h4 className="font-medium text-gray-900 dark:text-white">Discharge Summary</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Create and edit discharge summaries</p>
-            </button>
-            <button
-              onClick={() => navigate('/nursing-notes/enc-12345')}
-              className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-shadow text-left"
-            >
-              <FileText className="w-6 h-6 text-green-600 mb-2" />
-              <h4 className="font-medium text-gray-900 dark:text-white">Nursing Notes</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Shift-wise progress notes</p>
-            </button>
-            <button
-              onClick={() => navigate('/care-plan/enc-12345')}
-              className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-shadow text-left"
-            >
-              <Target className="w-6 h-6 text-purple-600 mb-2" />
-              <h4 className="font-medium text-gray-900 dark:text-white">Care Plan</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-400">AI-suggested goals and interventions</p>
-            </button>
-          </div>
+      {/* Nursing Modules Quick Access */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
+        <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-400 mb-4">
+          Nursing Modules
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => navigate('/discharge-summary/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-shadow text-left"
+          >
+            <FileText className="w-6 h-6 text-blue-600 mb-2" />
+            <h4 className="font-medium text-gray-900 dark:text-white">Discharge Summary</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Create and edit discharge summaries</p>
+          </button>
+          <button
+            onClick={() => navigate('/nursing-notes/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-shadow text-left"
+          >
+            <FileText className="w-6 h-6 text-green-600 mb-2" />
+            <h4 className="font-medium text-gray-900 dark:text-white">Nursing Notes</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Shift-wise progress notes</p>
+          </button>
+          <button
+            onClick={() => navigate('/care-plan/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700 hover:shadow-md transition-shadow text-left"
+          >
+            <Target className="w-6 h-6 text-purple-600 mb-2" />
+            <h4 className="font-medium text-gray-900 dark:text-white">Care Plan</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">AI-suggested goals and interventions</p>
+          </button>
         </div>
-      )}
+      </div>
     </div>
   );
 
@@ -266,6 +263,38 @@ export function Dashboard() {
       {/* Tasks */}
       <TaskBoard tasks={mockTasks} />
 
+      {/* Nursing Features Quick Access */}
+      <div className="bg-gradient-to-r from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 rounded-lg p-6 border border-teal-200 dark:border-teal-800">
+        <h3 className="text-lg font-semibold text-teal-800 dark:text-teal-400 mb-4">
+          Nursing Documentation
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => navigate('/discharge-summary/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-teal-200 dark:border-teal-700 hover:shadow-md transition-shadow text-left"
+          >
+            <FileText className="w-6 h-6 text-blue-600 mb-2" />
+            <h4 className="font-medium text-gray-900 dark:text-white">Discharge Summary</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Create and edit discharge summaries</p>
+          </button>
+          <button
+            onClick={() => navigate('/nursing-notes/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-teal-200 dark:border-teal-700 hover:shadow-md transition-shadow text-left"
+          >
+            <FileText className="w-6 h-6 text-green-600 mb-2" />
+            <h4 className="font-medium text-gray-900 dark:text-white">Nursing Notes</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Shift-wise progress notes</p>
+          </button>
+          <button
+            onClick={() => navigate('/care-plan/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-teal-200 dark:border-teal-700 hover:shadow-md transition-shadow text-left"
+          >
+            <Target className="w-6 h-6 text-purple-600 mb-2" />
+            <h4 className="font-medium text-gray-900 dark:text-white">Care Plan</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-400">AI-suggested goals and interventions</p>
+          </button>
+        </div>
+      </div>
       {/* Advanced Analytics */}
       <AdvancedAnalytics role="nurse" />
     </div>

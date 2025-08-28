@@ -1,7 +1,7 @@
 [
   {
     "id": "nn-201",
-    "encounterId": "enc-12345",
+    "encounterId": "V001",
     "author": "Nurse A",
     "shift": "Day",
     "time": "2025-08-28T08:00:00Z",
@@ -13,7 +13,7 @@
   },
   {
     "id": "nn-202",
-    "encounterId": "enc-12345",
+    "encounterId": "V001",
     "author": "Nurse B",
     "shift": "Evening",
     "time": "2025-08-28T16:00:00Z",
