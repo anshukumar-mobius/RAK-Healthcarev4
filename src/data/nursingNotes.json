@@ -1,0 +1,26 @@
+[
+  {
+    "id": "nn-201",
+    "encounterId": "enc-12345",
+    "author": "Nurse A",
+    "shift": "Day",
+    "time": "2025-08-28T08:00:00Z",
+    "vitals": { "bp": "120/78", "hr": 82, "temp": 37.1 },
+    "subjective": "Patient reports mild fatigue.",
+    "objective": "Stable vitals, no edema, urine output adequate.",
+    "assessment": "Improving CHF status.",
+    "plan": "Continue diuretics, monitor electrolytes."
+  },
+  {
+    "id": "nn-202",
+    "encounterId": "enc-12345",
+    "author": "Nurse B",
+    "shift": "Evening",
+    "time": "2025-08-28T16:00:00Z",
+    "vitals": { "bp": "118/76", "hr": 80, "temp": 36.9 },
+    "subjective": "Reports no pain.",
+    "objective": "Resting comfortably, ambulated 50m with assistance.",
+    "assessment": "Good tolerance to activity.",
+    "plan": "Encourage ambulation, monitor I&O."
+  }
+]

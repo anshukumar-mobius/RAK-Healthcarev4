@@ -19,6 +19,10 @@ import { Beds } from './pages/Beds';
 import { PendingTests } from './pages/PendingTests';
 import { AIAgents } from './pages/AIAgents';
 import { Settings } from './pages/Settings';
+import { DischargeSummary } from './pages/DischargeSummary';
+import { NursingNotes } from './pages/NursingNotes';
+import { CarePlan } from './pages/CarePlan';
+import { isFeatureEnabled } from './config/featureFlags';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -54,6 +58,14 @@ function AppContent() {
                 <Route path="/pending-tests" element={<PendingTests />} />
                 <Route path="/ai-agents" element={<AIAgents />} />
                 <Route path="/settings" element={<Settings />} />
+                {/* BOLT_DS_V1 Feature Routes */}
+                {isFeatureEnabled('BOLT_DS_V1') && (
+                  <>
+                    <Route path="/discharge-summary/:encounterId" element={<DischargeSummary />} />
+                    <Route path="/nursing-notes/:encounterId" element={<NursingNotes />} />
+                    <Route path="/care-plan/:encounterId" element={<CarePlan />} />
+                  </>
+                )}
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </div>

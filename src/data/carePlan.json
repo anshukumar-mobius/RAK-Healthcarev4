@@ -1,0 +1,18 @@
+{
+  "id": "cp-301",
+  "encounterId": "enc-12345",
+  "diagnoses": [
+    { "code": "CHF", "label": "Congestive Heart Failure" },
+    { "code": "FALL", "label": "High Fall Risk" }
+  ],
+  "goals": [
+    { "id": "g-1", "text": "Maintain oxygen saturation > 95%", "status": "in-progress", "progress": 60 },
+    { "id": "g-2", "text": "Patient ambulates 50m with assistance", "status": "planned", "progress": 0 }
+  ],
+  "interventions": [
+    "Monitor intake & output every 8h",
+    "Administer diuretics as prescribed",
+    "Implement fall precautions",
+    "Encourage progressive ambulation"
+  ]
+}

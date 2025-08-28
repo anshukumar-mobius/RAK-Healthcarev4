@@ -1,0 +1,13 @@
+{
+  "id": "ds-101",
+  "encounterId": "enc-12345",
+  "patient": { "id": "p-1001", "name": "John Doe" },
+  "sections": [
+    { "title": "Admission", "text": "Admitted with shortness of breath, CHF exacerbation." },
+    { "title": "Hospital Course", "text": "Responded well to IV diuretics. Improved oxygenation." },
+    { "title": "Diagnostics", "text": "Chest X-ray showed pulmonary edema. BNP elevated." },
+    { "title": "Discharge Medications", "text": "Lasix 40mg PO daily, Lisinopril 10mg PO daily." },
+    { "title": "Follow-up", "text": "Cardiology OPD in 2 weeks." }
+  ],
+  "status": "draft"
+}
