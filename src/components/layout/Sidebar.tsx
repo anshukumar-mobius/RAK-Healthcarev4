@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../hooks/useAuth';
+import { t } from '../../utils/translations';
 
 interface MenuItem {
   icon: LucideIcon;

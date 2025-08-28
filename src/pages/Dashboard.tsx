@@ -1,5 +1,6 @@
-import React from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useApp } from '../contexts/AppContext';
 import { KPICard } from '../components/dashboard/KPICard';
 import { Chart } from '../components/dashboard/Chart';
 import { DataTable } from '../components/dashboard/DataTable';
@@ -15,7 +16,10 @@ import {
   AlertTriangle,
   CheckCircle,
   Bed,
-  DollarSign
+  DollarSign,
+  FileText,
+  ClipboardList,
+  Target
 } from 'lucide-react';
 import { t } from '../utils/translations';
 
@@ -88,6 +92,7 @@ const tableColumns = [
 export function Dashboard() {
   const { user } = useAuth();
   const { language } = useApp();
+  const navigate = useNavigate();
 
   const renderAdminDashboard = () => (
     <div className="space-y-6">
@@ -132,6 +137,55 @@ export function Dashboard() {
       {/* Advanced Analytics */}
       <AdvancedAnalytics role="admin" />
       <AdvancedAnalytics role="doctor" />
+    </div>
+  );
+
+  const renderDoctorDashboard = () => (
+    <div className="space-y-6">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard
+          title={t('myPatients', language)}
+          value="28"
+          change={{ value: 3, type: 'increase' }}
+          icon={Users}
+          color="blue"
+        />
+        <KPICard
+          title={t('todayAppointments', language)}
+          value="12"
+          change={{ value: 2, type: 'increase' }}
+          icon={Calendar}
+          color="green"
+        />
+        <KPICard
+          title={t('pendingResults', language)}
+          value="5"
+          change={{ value: 1, type: 'decrease' }}
+          icon={FlaskConical}
+          color="yellow"
+        />
+        <KPICard
+          title={t('urgentTasks', language)}
+          value="3"
+          change={{ value: 1, type: 'increase' }}
+          icon={AlertTriangle}
+          color="red"
+        />
+      </div>
+
+      {/* Tasks and Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TaskBoard tasks={mockTasks} />
+        <AdvancedAnalytics role="doctor" />
+      </div>
+
+      {/* Recent Patients Table */}
+      <DataTable
+        title={t('recentPatients', language)}
+        data={mockTableData}
+        columns={tableColumns}
+      />
     </div>
   );
 
