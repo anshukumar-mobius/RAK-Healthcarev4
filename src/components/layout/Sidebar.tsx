@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -20,7 +21,7 @@ import { t } from '../../utils/translations';
 interface MenuItem {
   icon: React.ComponentType<any>;
   label: string;
-  key: string;
+  path: string;
   roles: string[];
 }
 
@@ -28,90 +29,88 @@ const menuItems: MenuItem[] = [
   {
     icon: LayoutDashboard,
     label: 'dashboard',
-    key: 'dashboard',
+    path: '/dashboard',
     roles: ['admin', 'doctor', 'nurse', 'receptionist', 'diagnostician']
   },
   {
     icon: Users,
     label: 'patients',
-    key: 'patients',
+    path: '/patients',
     roles: ['admin', 'doctor', 'nurse', 'receptionist']
   },
   {
     icon: Calendar,
     label: 'appointments',
-    key: 'appointments',
+    path: '/appointments',
     roles: ['admin', 'doctor', 'nurse', 'receptionist']
   },
   {
     icon: FlaskConical,
     label: 'diagnostics',
-    key: 'diagnostics',
+    path: '/diagnostics',
     roles: ['admin', 'doctor', 'diagnostician']
   },
   {
     icon: CreditCard,
     label: 'billing',
-    key: 'billing',
+    path: '/billing',
     roles: ['admin', 'receptionist']
   },
   {
     icon: CheckSquare,
     label: 'myTasks',
-    key: 'tasks',
+    path: '/tasks',
     roles: ['doctor', 'nurse']
   },
   {
     icon: UserPlus,
     label: 'patientRegistration',
-    key: 'registration',
+    path: '/registration',
     roles: ['receptionist']
   },
   {
     icon: Activity,
     label: 'vitalSigns',
-    key: 'vitals',
+    path: '/vitals',
     roles: ['nurse']
   },
   {
     icon: Bed,
     label: 'bedOccupancy',
-    key: 'beds',
+    path: '/beds',
     roles: ['admin', 'nurse']
   },
   {
     icon: ClipboardList,
     label: 'pendingTests',
-    key: 'pending-tests',
+    path: '/pending-tests',
     roles: ['diagnostician']
   },
   {
     icon: Bot,
     label: 'AI Agents',
-    key: 'ai-agents',
+    path: '/ai-agents',
     roles: ['admin', 'doctor', 'nurse', 'receptionist', 'diagnostician']
   },
   {
     icon: Settings,
     label: 'Settings',
-    key: 'settings',
+    path: '/settings',
     roles: ['admin', 'doctor', 'nurse', 'receptionist', 'diagnostician']
   }
 ];
 
-interface SidebarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
 
-export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export function Sidebar() {
   const { language, isRTL } = useApp();
   const { user, canAccessRoute } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   if (!user) return null;
 
   const filteredMenuItems = menuItems.filter(item => 
-    item.roles.includes(user.role) && canAccessRoute(item.key)
+    item.roles.includes(user.role) && canAccessRoute(item.path.substring(1))
   );
 
   return (
@@ -132,12 +131,12 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       <nav className="p-3 space-y-1">
         {filteredMenuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.key;
+          const isActive = location.pathname === item.path;
           
           return (
             <button
-              key={item.key}
-              onClick={() => setActiveTab(item.key)}
+              key={item.path}
+              onClick={() => navigate(item.path)}
               className={`w-full flex items-center space-x-2 rtl:space-x-reverse px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
                 isActive
                   ? 'bg-rak-pink-50 dark:bg-rak-pink-900/20 text-rak-magenta-700 dark:text-rak-magenta-400 border-r-2 rtl:border-r-0 rtl:border-l-2 border-rak-magenta-600 shadow-sm'
@@ -145,7 +144,7 @@ export function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
               }`}
             >
               <Icon className="w-4 h-4" />
-              <span>{t(item.label, language)} {user.role === 'admin' && item.key === 'settings' && '⚙️'}</span>
+              <span>{t(item.label, language)} {user.role === 'admin' && item.path === '/settings' && '⚙️'}</span>
             </button>
           );
         })}

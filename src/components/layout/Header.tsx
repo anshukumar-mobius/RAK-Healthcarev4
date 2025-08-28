@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Moon, Sun, Globe, User, LogOut, Shield, Phone, Calendar, Search, Menu } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,6 +8,7 @@ import { t } from '../../utils/translations';
 export function Header() {
   const { language, setLanguage, theme, setTheme, isRTL } = useApp();
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [showMobileMenu, setShowMobileMenu] = React.useState(false);
 
   return (
@@ -89,7 +91,7 @@ export function Header() {
 
             {/* Notifications */}
             <button 
-              onClick={() => window.location.hash = '#ai-agents'}
+              onClick={() => navigate('/ai-agents')}
               className="relative p-1.5 text-gray-500 hover:text-rak-magenta-600 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-rak-pink-100 dark:hover:bg-gray-800 rounded-md transition-colors"
             >
               <Bell className="w-5 h-5" />
