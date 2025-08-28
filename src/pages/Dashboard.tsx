@@ -234,7 +234,7 @@ export function Dashboard() {
         <h3 className="text-lg font-semibold text-rak-magenta-700 dark:text-rak-magenta-400 mb-4">
           Nursing Documentation
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <button
             onClick={() => navigate('/discharge-summary/V001')}
             className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-rak-pink-200 dark:border-rak-pink-700 hover:shadow-md transition-shadow text-left"
@@ -276,6 +276,21 @@ export function Dashboard() {
               <div>
                 <h4 className="font-medium text-gray-900 dark:text-white">Care Plan</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Manage patient care goals</p>
+              </div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => navigate('/discharge-form')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-rak-pink-200 dark:border-rak-pink-700 hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">Discharge Form</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Complete discharge documentation</p>
               </div>
             </div>
           </button>

@@ -45,6 +45,7 @@ export const translations = {
     dischargeSummary: 'Discharge Summary',
     nursingNotes: 'Nursing Notes',
     carePlan: 'Care Plan',
+    dischargeForm: 'Discharge Form',
     
     // Appointments
     newAppointment: 'New Appointment',
@@ -121,6 +122,7 @@ export const translations = {
     dischargeSummary: 'ملخص الخروج',
     nursingNotes: 'ملاحظات التمريض',
     carePlan: 'خطة الرعاية',
+    dischargeForm: 'نموذج الخروج',
     
     // Appointments
     newAppointment: 'موعد جديد',

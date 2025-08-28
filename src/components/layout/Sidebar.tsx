@@ -90,6 +90,14 @@ const nursingMenuItems: MenuItem[] = [
     priority: 2,
     section: 'Documentation'
   },
+  {
+    icon: FileText,
+    label: 'dischargeForm',
+    path: '/discharge-form',
+    roles: ['nurse'],
+    priority: 2,
+    section: 'Documentation'
+  },
   
   // Lower Priority - Management
   {
