@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AppProvider } from './contexts/AppContext';
+import {AppProvider}  from './contexts/AppContext';
 import { useAuth } from './hooks/useAuth';
 import { LoginForm } from './components/auth/LoginForm';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -13,7 +13,7 @@ import { Appointments } from './pages/Appointments';
 import { Diagnostics } from './pages/Diagnostics';
 import { Billing } from './pages/Billing';
 import { Tasks } from './pages/Tasks';
-import { Registration } from './pages/Registration';
+import Registration from './pages/Registration';
 import { VitalSigns } from './pages/VitalSigns';
 import { Beds } from './pages/Beds';
 import { PendingTests } from './pages/PendingTests';
