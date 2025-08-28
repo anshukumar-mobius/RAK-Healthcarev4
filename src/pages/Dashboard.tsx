@@ -236,7 +236,7 @@ export function Dashboard() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <button
-            onClick={() => navigate('/discharge-summary/V001')}
+            onClick={() => navigate('/discharge-summary')}
             className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-rak-pink-200 dark:border-rak-pink-700 hover:shadow-md transition-shadow text-left"
           >
             <div className="flex items-center space-x-3">
@@ -244,14 +244,14 @@ export function Dashboard() {
                 <FileText className="w-5 h-5 text-rak-magenta-600 dark:text-rak-magenta-400" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">Discharge Summary</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Create & edit discharge summaries</p>
+                <h4 className="font-medium text-gray-900 dark:text-white">Discharge Management</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Manage all discharge documentation</p>
               </div>
             </div>
           </button>
           
           <button
-            onClick={() => navigate('/nursing-notes/V001')}
+            onClick={() => navigate('/nursing-notes')}
             className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-rak-pink-200 dark:border-rak-pink-700 hover:shadow-md transition-shadow text-left"
           >
             <div className="flex items-center space-x-3">
@@ -260,7 +260,7 @@ export function Dashboard() {
               </div>
               <div>
                 <h4 className="font-medium text-gray-900 dark:text-white">Nursing Notes</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Document shift notes & progress</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Manage all nursing documentation</p>
               </div>
             </div>
           </button>

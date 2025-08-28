@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   FileText, 
   Save, 
@@ -15,7 +15,9 @@ import {
   Stethoscope,
   Activity,
   Plus,
-  X
+  X,
+  Download,
+  Edit
 } from 'lucide-react';
 import { useEMRStore } from '../stores/emrStore';
 
@@ -66,14 +68,20 @@ interface DischargeFormData {
     rr: number;
     spo2: number;
   };
+  // Discharge Summary Sections
+  sections: Array<{
+    title: string;
+    text: string;
+  }>;
 }
 
 export function DischargeForm() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { patients } = useEMRStore();
   
   const [formData, setFormData] = useState<DischargeFormData>({
-    patientId: '',
+    patientId: searchParams.get('patientId') || '',
     dischargeDate: new Date().toISOString().split('T')[0],
     dischargeTime: new Date().toTimeString().slice(0, 5),
     attendingPhysician: '',
@@ -103,13 +111,37 @@ export function DischargeForm() {
       temp: 0,
       rr: 0,
       spo2: 0
-    }
+    },
+    sections: [
+      { title: 'Admission', text: '' },
+      { title: 'Hospital Course', text: '' },
+      { title: 'Diagnostics', text: '' },
+      { title: 'Discharge Medications', text: '' },
+      { title: 'Follow-up', text: '' }
+    ]
   });
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 6;
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const totalSteps = 7; // Updated to include discharge summary
 
   const selectedPatient = patients.find(p => p.id === formData.patientId);
+
+  useEffect(() => {
+    // If patient ID is provided in URL, auto-populate some fields
+    if (selectedPatient) {
+      setFormData(prev => ({
+        ...prev,
+        primaryDiagnosis: selectedPatient.chronicConditions[0] || '',
+        emergencyContacts: [{
+          name: selectedPatient.emergencyContact.name,
+          relationship: selectedPatient.emergencyContact.relationship,
+          phone: selectedPatient.emergencyContact.phone
+        }]
+      }));
+    }
+  }, [selectedPatient]);
 
   const addMedication = () => {
     setFormData(prev => ({
@@ -163,12 +195,37 @@ export function DischargeForm() {
     }));
   };
 
+  const handleEditSection = (sectionTitle: string, currentText: string) => {
+    setEditingSection(sectionTitle);
+    setEditText(currentText);
+  };
+
+  const handleSaveSection = () => {
+    if (editingSection) {
+      setFormData(prev => ({
+        ...prev,
+        sections: prev.sections.map(section =>
+          section.title === editingSection
+            ? { ...section, text: editText }
+            : section
+        )
+      }));
+      setEditingSection(null);
+      setEditText('');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSection(null);
+    setEditText('');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Discharge form submitted:', formData);
     // Here you would save the discharge form data
-    alert('Discharge form completed successfully!');
-    navigate('/dashboard');
+    alert('Discharge documentation completed successfully!');
+    navigate('/discharge-summary-overview');
   };
 
   const nextStep = () => {
@@ -450,7 +507,7 @@ export function DischargeForm() {
           </div>
         );
 
-      case 2:
+      case 3:
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Discharge Medications</h3>
@@ -561,7 +618,7 @@ export function DischargeForm() {
           </div>
         );
 
-      case 3:
+      case 4:
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Care Instructions</h3>
@@ -609,7 +666,7 @@ export function DischargeForm() {
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Follow-up Care</h3>
@@ -707,7 +764,7 @@ export function DischargeForm() {
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Warning Signs & Emergency Information</h3>
@@ -769,7 +826,71 @@ export function DischargeForm() {
           </div>
         );
 
-      case 6:
+      case 7:
+        return (
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Discharge Summary Sections</h3>
+            
+            <div className="space-y-4">
+              {formData.sections.map((section, index) => (
+                <div key={index} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-rak-pink-50 to-rak-beige-50 dark:from-rak-pink-900/10 dark:to-rak-beige-900/10">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {section.title}
+                      </h3>
+                      {editingSection !== section.title && (
+                        <button
+                          onClick={() => handleEditSection(section.title, section.text)}
+                          className="flex items-center space-x-1 text-rak-magenta-600 hover:text-rak-magenta-700 text-sm font-medium"
+                        >
+                          <Edit className="w-4 h-4" />
+                          <span>Edit</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="p-4">
+                    {editingSection === section.title ? (
+                      <div className="space-y-4">
+                        <textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          rows={6}
+                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rak-magenta-500 resize-none"
+                        />
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={handleSaveSection}
+                            className="flex items-center space-x-1 bg-rak-magenta-600 hover:bg-rak-magenta-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                          >
+                            <Save className="w-4 h-4" />
+                            <span>Save</span>
+                          </button>
+                          <button
+                            onClick={handleCancelEdit}
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="prose dark:prose-invert max-w-none">
+                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {section.text || <span className="text-gray-400 italic">No content added yet. Click Edit to add information.</span>}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Review & Finalize</h3>
@@ -850,9 +971,6 @@ export function DischargeForm() {
             </div>
           </div>
         );
-
-      default:
-        return null;
     }
   };
 
@@ -871,10 +989,10 @@ export function DischargeForm() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
               <FileText className="w-8 h-8 mr-3 text-rak-magenta-600" />
-              Patient Discharge Form
+              Comprehensive Discharge Documentation
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Comprehensive discharge documentation and planning
+              Complete discharge planning and summary documentation
             </p>
           </div>
         </div>
@@ -900,11 +1018,12 @@ export function DischargeForm() {
         
         <div className="flex justify-between mt-2 text-xs text-gray-500">
           <span>Patient Info</span>
+          <span>Clinical Info</span>
           <span>Medications</span>
           <span>Care Instructions</span>
           <span>Follow-up</span>
           <span>Warnings</span>
-          <span>Review</span>
+          <span>Summary</span>
         </div>
       </div>
 

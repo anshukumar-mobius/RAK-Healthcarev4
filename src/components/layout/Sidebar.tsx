@@ -68,16 +68,16 @@ const nursingMenuItems: MenuItem[] = [
   // Medium Priority - Documentation
   {
     icon: FileText,
-    label: 'dischargeSummary',
-    path: '/discharge-summary/V001',
+    label: 'dischargeManagement',
+    path: '/discharge-summary',
     roles: ['nurse'],
     priority: 2,
     section: 'Documentation'
   },
   {
     icon: ClipboardList,
-    label: 'nursingNotes',
-    path: '/nursing-notes/V001',
+    label: 'nursingNotes', 
+    path: '/nursing-notes',
     roles: ['nurse'],
     priority: 2,
     section: 'Documentation'

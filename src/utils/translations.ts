@@ -43,6 +43,7 @@ export const translations = {
     
     // Nursing Features
     dischargeSummary: 'Discharge Summary',
+    dischargeManagement: 'Discharge Management',
     nursingNotes: 'Nursing Notes',
     carePlan: 'Care Plan',
     carePlans: 'Care Plans',
@@ -121,6 +122,7 @@ export const translations = {
     
     // Nursing Features
     dischargeSummary: 'ملخص الخروج',
+    dischargeManagement: 'إدارة الخروج',
     nursingNotes: 'ملاحظات التمريض',
     carePlan: 'خطة الرعاية',
     dischargeForm: 'نموذج الخروج',
