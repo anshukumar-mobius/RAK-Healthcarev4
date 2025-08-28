@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import {AppProvider}  from './contexts/AppContext';
-import { useAuth } from './hooks/useAuth';
 import { LoginForm } from './components/auth/LoginForm';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { SessionManager } from './components/auth/SessionManager';
@@ -53,15 +52,6 @@ function AppContent() {
                 <Route path="/tasks" element={<Tasks />} />
                 <Route path="/registration" element={<Registration />} />
                 <Route path="/vitals" element={<VitalSigns />} />
-                <Route path="/beds" element={<Beds />} />
-                <Route path="/pending-tests" element={<PendingTests />} />
-                <Route path="/ai-agents" element={<AIAgents />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/discharge-summary/:encounterId" element={<DischargeSummary />} />
-                <Route path="/nursing-notes/:encounterId" element={<NursingNotes />} />
-                <Route path="/care-plan/:encounterId" element={<CarePlan />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
             </div>
           </main>
         </div>

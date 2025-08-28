@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useApp } from '../contexts/AppContext';
 import { KPICard } from '../components/dashboard/KPICard';
 import { Chart } from '../components/dashboard/Chart';
 import { DataTable } from '../components/dashboard/DataTable';
@@ -132,61 +131,6 @@ export function Dashboard() {
 
       {/* Advanced Analytics */}
       <AdvancedAnalytics role="admin" />
-    </div>
-  );
-
-  const renderDoctorDashboard = () => (
-    <div className="space-y-6">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Today's Patients"
-          value="24"
-          change={{ value: 2, type: 'increase' }}
-          icon={Users}
-          color="blue"
-        />
-        <KPICard
-          title={t('avgConsultationTime', language)}
-          value="18 min"
-          change={{ value: 5, type: 'decrease' }}
-          icon={Clock}
-          color="green"
-        />
-        <KPICard
-          title={t('pendingTests', language)}
-          value="7"
-          change={{ value: 1, type: 'increase' }}
-          icon={FlaskConical}
-          color="yellow"
-        />
-        <KPICard
-          title="Patient Satisfaction"
-          value="4.8/5"
-          change={{ value: 3, type: 'increase' }}
-          icon={TrendingUp}
-          color="teal"
-        />
-      </div>
-
-      {/* Tasks and Appointments */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div>
-          <TaskBoard tasks={mockTasks} />
-        </div>
-        <div>
-          <DataTable
-            title="Today's Appointments"
-            columns={tableColumns}
-            data={mockTableData}
-            searchable={true}
-            filterable={false}
-            exportable={true}
-          />
-        </div>
-      </div>
-
-      {/* Advanced Analytics */}
       <AdvancedAnalytics role="doctor" />
     </div>
   );
@@ -230,6 +174,59 @@ export function Dashboard() {
 
       {/* Advanced Analytics */}
       <AdvancedAnalytics role="nurse" />
+
+      {/* Nursing Documentation */}
+      <div className="bg-gradient-to-r from-rak-pink-50 to-rak-beige-50 dark:from-rak-pink-900/20 dark:to-rak-beige-900/20 rounded-lg p-6 border border-rak-pink-200 dark:border-rak-pink-800">
+        <h3 className="text-lg font-semibold text-rak-magenta-700 dark:text-rak-magenta-400 mb-4">
+          Nursing Documentation
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={() => navigate('/discharge-summary/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-rak-pink-200 dark:border-rak-pink-700 hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-rak-magenta-100 dark:bg-rak-magenta-900/20 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 text-rak-magenta-600 dark:text-rak-magenta-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">Discharge Summary</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Create & edit discharge summaries</p>
+              </div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => navigate('/nursing-notes/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-rak-pink-200 dark:border-rak-pink-700 hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-rak-beige-100 dark:bg-rak-beige-900/20 rounded-lg flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-rak-beige-600 dark:text-rak-beige-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">Nursing Notes</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Document shift notes & progress</p>
+              </div>
+            </div>
+          </button>
+          
+          <button
+            onClick={() => navigate('/care-plan/V001')}
+            className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-rak-pink-200 dark:border-rak-pink-700 hover:shadow-md transition-shadow text-left"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-rak-success-100 dark:bg-rak-success-900/20 rounded-lg flex items-center justify-center">
+                <Target className="w-5 h-5 text-rak-success-600 dark:text-rak-success-400" />
+              </div>
+              <div>
+                <h4 className="font-medium text-gray-900 dark:text-white">Care Plan</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Manage patient care goals</p>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   );
 
