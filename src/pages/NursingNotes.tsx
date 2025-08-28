@@ -487,8 +487,8 @@ export function NursingNotes() {
               </div>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
