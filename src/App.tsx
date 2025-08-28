@@ -22,6 +22,7 @@ import { DischargeSummary } from './pages/DischargeSummary';
 import { NursingNotes } from './pages/NursingNotes';
 import { CarePlan } from './pages/CarePlan';
 import { DischargeForm } from './pages/DischargeForm';
+import { CarePlanOverview } from './pages/CarePlanOverview';
 
 function AppContent() {
   const { isAuthenticated } = useAuth();
@@ -61,6 +62,7 @@ function AppContent() {
                 <Route path="/nursing-notes/:encounterId" element={<NursingNotes />} />
                 <Route path="/care-plan/:encounterId" element={<CarePlan />} />
                 <Route path="/discharge-form" element={<DischargeForm />} />
+                <Route path="/care-plan" element={<CarePlanOverview />} />
               </Routes>
             </div>
           </main>

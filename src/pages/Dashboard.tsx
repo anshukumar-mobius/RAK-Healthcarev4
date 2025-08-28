@@ -266,7 +266,7 @@ export function Dashboard() {
           </button>
           
           <button
-            onClick={() => navigate('/care-plan/V001')}
+            onClick={() => navigate('/care-plan')}
             className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-rak-pink-200 dark:border-rak-pink-700 hover:shadow-md transition-shadow text-left"
           >
             <div className="flex items-center space-x-3">
@@ -274,8 +274,8 @@ export function Dashboard() {
                 <Target className="w-5 h-5 text-rak-success-600 dark:text-rak-success-400" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">Care Plan</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Manage patient care goals</p>
+                <h4 className="font-medium text-gray-900 dark:text-white">Care Plans</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Manage all patient care plans</p>
               </div>
             </div>
           </button>

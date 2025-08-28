@@ -84,8 +84,8 @@ const nursingMenuItems: MenuItem[] = [
   },
   {
     icon: Target,
-    label: 'carePlan',
-    path: '/care-plan/V001',
+    label: 'carePlans',
+    path: '/care-plan',
     roles: ['nurse'],
     priority: 2,
     section: 'Documentation'

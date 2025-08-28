@@ -45,6 +45,7 @@ export const translations = {
     dischargeSummary: 'Discharge Summary',
     nursingNotes: 'Nursing Notes',
     carePlan: 'Care Plan',
+    carePlans: 'Care Plans',
     dischargeForm: 'Discharge Form',
     
     // Appointments
