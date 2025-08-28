@@ -115,7 +115,7 @@ export function Registration() {
               <p className="text-sm text-gray-600 dark:text-gray-400">Register & schedule</p>
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Registration Statistics */}
